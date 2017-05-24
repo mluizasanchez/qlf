@@ -64,4 +64,4 @@ nohup bokeh serve --allow-websocket-origin=localhost:8000 dashboard/bokeh/qasnr 
 echo "QLF is running at http://localhost:8000"
 
 # QLF daemon
-python -Wi ../bin/qlf_daemon.py
+python -Wi ../bin/qlf_daemon.py &

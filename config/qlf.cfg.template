@@ -40,3 +40,9 @@ datadir=
 
 # Processing output, e.g. /home/user/scratch
 scratch=
+
+[daemon]
+# server (IP or localhost)
+nameserver=qlf.daemon
+host=
+port=
