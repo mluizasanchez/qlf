@@ -60,8 +60,5 @@ fi
 echo "Starting QLF..."
 nohup python -Wi manage.py runserver &> $LOGDIR/runserver.log & echo $(ps opgid= $!) > $LOGDIR/run.pgid
 nohup bokeh serve --allow-websocket-origin=localhost:8000 dashboard/bokeh/qasnr dashboard/bokeh/monitor dashboard/bokeh/exposures &> $LOGDIR/bokeh.log & 
-
+nohup python -Wi ../bin/qlf_daemon.py > $LOGDIR/daemon.log 2>&1 &
 echo "QLF is running at http://localhost:8000"
-
-# QLF daemon
-python -Wi ../bin/qlf_daemon.py &
