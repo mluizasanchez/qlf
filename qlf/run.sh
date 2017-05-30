@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export QLF_PROJECT=$(pwd)
+
 # Run QLF in development mode, create db if it does not exist
 # start QLF web applicationi, Bokeh server and the QLF daemon
 
@@ -15,9 +17,13 @@ echo "Setting DESI Quick Look environment..."
 
 for package in desispec desiutil; do
 	echo "Setting $package..."
+	cd $QLF_ROOT/$package
+	git pull origin master
 	export PATH=$QLF_ROOT/$package/bin:$PATH
 	export PYTHONPATH=$QLF_ROOT/$package/py:$PYTHONPATH
 done
+
+cd $QLF_PROJECT
 
 echo "Initializing QLF database..."
 # Test user for the development db
@@ -60,8 +66,5 @@ fi
 echo "Starting QLF..."
 nohup python -Wi manage.py runserver &> $LOGDIR/runserver.log & echo $(ps opgid= $!) > $LOGDIR/run.pgid
 nohup bokeh serve --allow-websocket-origin=localhost:8000 dashboard/bokeh/qasnr dashboard/bokeh/monitor dashboard/bokeh/exposures &> $LOGDIR/bokeh.log & 
-
+nohup python -Wi ../bin/qlf_daemon.py > $LOGDIR/daemon.log 2>&1 &
 echo "QLF is running at http://localhost:8000"
-
-# QLF daemon
-python -Wi ../bin/qlf_daemon.py &
