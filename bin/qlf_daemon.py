@@ -39,6 +39,7 @@ class QLFRun(Process):
         self.exit = Event()
         self.dos_monitor = DOSmonitor()
         self.last_night = str()
+        self.running = Event()
 
         # TODO: get last night from db (improve)
         models = QLFModels()
@@ -64,10 +65,12 @@ class QLFRun(Process):
                     logger.info('Execution stopped')
                     break
 
+                self.running.set()
                 ql = QLFPipeline(exposure)
                 ql.start_process()
                 logger.info('Executing expid %s...' % exposure.get('expid'))
 
+            self.running.clear()
             self.last_night = night
 
         logger.info("Bye!")
@@ -83,21 +86,21 @@ class QLFRun(Process):
 @Pyro4.behavior(instance_mode="single")
 class QLFDaemon(object):
     def __init__(self):
-        self.run = False
+        self.process = False
 
     def start(self):
-        if self.run and self.run.is_alive():
-            self.run.clear()
-            logger.info("Monitor is already initialized (pid: %i)." % self.run.pid)
+        if self.process and self.process.is_alive():
+            self.process.clear()
+            logger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
         else:
-            self.run = QLFRun()
-            self.run.start()
-            logger.info("Starting pid %i..." % self.run.pid)
+            self.process = QLFRun()
+            self.process.start()
+            logger.info("Starting pid %i..." % self.process.pid)
 
     def stop(self):
-        if self.run and self.run.is_alive():
-            logger.info("Stop pid %i" % self.run.pid)
-            self.run.shutdown()
+        if self.process and self.process.is_alive():
+            logger.info("Stop pid %i" % self.process.pid)
+            self.process.shutdown()
         else:
             logger.info("Monitor is not initialized.")
 
@@ -110,12 +113,20 @@ class QLFDaemon(object):
     def get_status(self):
         status = False
 
-        if self.run and not self.run.exit.is_set():
+        if self.process and not self.process.exit.is_set():
             status = True
 
-        logger.info("Running? {}".format(status))
+        logger.info("QLF Daemon status: {}".format(status))
         return status
 
+    def is_running(self):
+        running = False
+
+        if self.process and self.process.running.is_set():
+            running = True
+
+        logger.info("Running? {}".format(running))
+        return running
 
 def main():
     try:
