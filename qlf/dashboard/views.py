@@ -7,6 +7,7 @@ from .serializers import (
     QASerializer, ProcessSerializer, ConfigurationSerializer, ProcessJobsSerializer
 )
 import Pyro4
+
 from django.http import HttpResponseRedirect
 from django.conf import settings
 
@@ -14,8 +15,11 @@ from bokeh.embed import autoload_server
 from django.template import loader
 from django.http import HttpResponse
 
+from django.contrib import messages
 import logging
 
+uri = settings.QLF_DAEMON_URL
+qlf = Pyro4.Proxy(uri)
 logger = logging.getLogger(__name__)
 
 class DefaultsMixin(object):
@@ -104,20 +108,13 @@ class CameraViewSet(DefaultsMixin, viewsets.ModelViewSet):
     serializer_class = CameraSerializer
 
 def start(request):
-    uri = "PYRO:qlf.daemon@localhost:56005"
-    qlf = Pyro4.Proxy(uri)
     qlf.start()
     return HttpResponseRedirect('dashboard/monitor')
-
 def stop(request):
-    uri = "PYRO:qlf.daemon@localhost:56005"
-    qlf = Pyro4.Proxy(uri)
     qlf.stop()
     return HttpResponseRedirect('dashboard/monitor')
 
 def restart(request):
-    uri = "PYRO:qlf.daemon@localhost:56005"
-    qlf = Pyro4.Proxy(uri)
     qlf.restart()
     return HttpResponseRedirect('dashboard/monitor')
 
@@ -138,6 +135,14 @@ def embed_bokeh(request, bokeh_app):
 
     context = {'bokeh_script': bokeh_script,
                'bokeh_app': bokeh_app}
+
+    status = qlf.get_status()
+    if status == True:
+        messages.success(request, "Running")
+    elif status == False:
+        messages.success(request, "Idle")
+    else:
+        messages.success(request, "- -")
 
     response = HttpResponse(template.render(context, request))
 
