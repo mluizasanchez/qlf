@@ -138,7 +138,7 @@ def embed_bokeh(request, bokeh_app):
 
     status = qlf.get_status()
     if status == True:
-        messages.success(request, "Running")
+        messages.success(request, "Processing incoming exposures")
     elif status == False:
         messages.success(request, "Idle")
     else:
