@@ -2,13 +2,24 @@ from bokeh.plotting import figure, output_file, curdoc
 from bokeh.models import ColumnDataSource, LabelSet, Label
 from bokeh.driving import count
 from dashboard.bokeh.helper import get_last_process
-
+from bokeh.models import CustomJS, Div
+from bokeh.layouts import column, row
 import configparser
 import os
 import logging
 
-logger = logging.getLogger(__name__)
 
+import Pyro4
+QLF_DAEMON_URL='PYRO:{}@{}:{}'.format(
+    os.environ.get('QLF_DAEMON_NS', 'qlf.daemon'),
+    os.environ.get('QLF_DAEMON_HOST', 'localhost'),
+    str(os.environ.get('QLF_DAEMON_PORT', 56005))
+)
+uri = QLF_DAEMON_URL
+qlf = Pyro4.Proxy(uri)
+
+logger = logging.getLogger(__name__)
+INDICE = -1
 qlf_root = os.getenv('QLF_ROOT')
 cfg = configparser.ConfigParser()
 
@@ -52,7 +63,7 @@ for num in range(30):
                                                   background_fill_color='white', background_fill_alpha=0.7)
         label_name.append('b' + str(num - 20))
 
-plot = figure(height=900, x_range=(-9, 120))
+plot = figure(height=900, x_range=(-9, 120), tools="tap")
 
 for cam in cameras:
     plot.add_layout(cameras[cam])
@@ -61,17 +72,39 @@ for cam in cameras:
 plot.xaxis.visible = False
 plot.yaxis.visible = False
 
-sourceBar = ColumnDataSource(dict(y=[0], right=[0], height=[0], color=['#0000FF']))
+sourceBar = ColumnDataSource(dict(y=[1], right=[1], height=[1], color=['#0000FF']))
 
-plot.hbar(y='y', right='right', height='height', color='color', source=sourceBar)
-curdoc().add_root(plot)
+plot.hbar(y='y', right='right', height='height', color='color', source=sourceBar, name='hbar')
+
+
+def callback(attr, old, new):
+    global INDICE
+    div.text = ''
+    INDICE = new['1d']['indices'][0]
+
+
+taptool = plot.select(dict(name='hbar'))
+
+hbar = taptool[0].data_source
+hbar.on_change('selected', callback)
+div = Div(text='', height=340, width=700)
+
+curdoc().add_root(column(plot, div))
+
 
 @count()
 def update(t):
     barsRight = list()
+    global INDICE
+    if len(str(INDICE)) == 1:
+        INDICE = 'z' + str(INDICE)[0]
+    if str(INDICE)[0] == '1':
+        INDICE = 'r' + str(INDICE)[1]
+    if str(INDICE)[0] == '2':
+        INDICE = 'b' + str(INDICE)[1]
 
     for num in range(30):
-        barsRight.append(0)
+        barsRight.append(50)
 
     proc_finished = False
 
@@ -87,14 +120,19 @@ def update(t):
 
         PROCESS = process
         exp_id = PROCESS.get("exposure")
-        plot.title.text = "Exposure ID: %i" % exp_id
+        status = qlf.get_status()
+        if status == True:
+            plot.title.text = "Processing Exposure ID: %i" % exp_id
+        elif status == False:
+            plot.title.text = "Resuming Exposure ID: %i" % exp_id
+        else:
+            plot.title.text = "Exposure ID: %i" % exp_id
 
     # logger.info("Process: %s" % PROCESS)
 
     # AF: loop over cameras
     for cam in cameras:
         if cam[:5] != 'stage':
-
             cameralog = None
             log = str()
 
@@ -109,7 +147,13 @@ def update(t):
 
             except Exception as e:
                 logger.warn(e)
-
+            if cam == INDICE:
+                if 'Pipeline completed' not in div.text and cameralog:
+                    div.text = '<h2>Ouput log for \
+                        camera %s:</h2><br><div style="max-height: 300px; overflow: auto;"> ' % cam
+                    for line in log:
+                        div.text += line + '<br>'
+                    div.text += '</div><br>'
             if cam[:1] == 'z':
                 barsRight[int(cam[1:])] = len(log)
             if cam[:1] == 'r':
@@ -137,5 +181,6 @@ def update(t):
 
     new_datat = dict(y=bars, right=barsRight, height=barsHeight, color=listColor)
     sourceBar.stream(new_datat, 30)
+
 
 curdoc().add_periodic_callback(update, 300)
