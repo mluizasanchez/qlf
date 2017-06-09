@@ -14,6 +14,7 @@ matplotlib
 # Packages required by the DESI Quick Look framework
 
 django=1.8.4
+psycopg2==2.7.1
 markdown=2.6.2
 django-filter=0.15.3
 djangorestframework=3.6.2

@@ -72,9 +72,42 @@ See development documentation at http://quick-look-framework.readthedocs.io
     Update the qlf.cfg file with local paths for the input data, log files, etc.
     ```
     
-    NOTE: in development mode, QLF will process the data specified in the `qlf.cfg`. Each time you run QLF a fresh database is created and the processing results are ingested at the end. 
+    NOTE: in development mode, QLF will process the data specified in the `qlf.cfg`. Each time you run QLF a fresh database is created and the processing results are ingested at the end.
 
-6. Start the QLF application 
+6. Change sqlite3 to postgresql (optional)
+
+    If you want to use the postgres database, do the following:
+    (Assuming the postgres server is installed and running)
+
+    ```
+    CREATE USER <db_user> WITH PASSWORD '<password>';
+    CREATE DATABASE <db_project> owner <db_user>;
+    ```
+
+    Now install the PostgreSQL database adapter:
+    ```
+    pip install psycopg2
+    ```
+
+    And edit the $QLF_ROOT/qlf/qlf/settings.py file by changing the DATABASES variable:
+
+    ```
+    DATABASES = {
+         'Default': {
+                 'ENGINE': 'django.db.backends.postgresql_psycopg2',
+                 'NAME': '<db_project>',
+                 'USER': '<db_user>',
+                 'PASSWORD': '<password>',
+                 'HOST': '127.0.0.1',
+                 'PORT': '',
+             }
+    }
+    ```
+
+    NOTE: Changing sqlite3 by postgresql is not recommended for the development mode because the database is not recreated.
+
+
+7. Start the QLF application 
 
     ```
     source ~/miniconda3/bin/activate

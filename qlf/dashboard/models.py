@@ -6,14 +6,14 @@ class Exposure(models.Model):
 
     # TODO: make null=False when exposure data is available
 
-    expid = models.CharField(max_length=8, unique=True,
-                                 help_text='Exposure number')
+    exposure_id = models.IntegerField(primary_key=True,
+                                   help_text='Exposure number')
     telra = models.FloatField(blank=True, null=True,
                               help_text='Central RA of the exposure')
     teldec = models.FloatField(blank=True, null=True,
                                help_text='Central Dec of the exposure')
     tile = models.IntegerField(blank=True, null=True,
-                                 help_text='Tile ID')
+                               help_text='Tile ID')
     dateobs = models.DateTimeField(blank=True, null=True,
                                    help_text='Date of observation')
     flavor = models.CharField(max_length=45, default='Object',
@@ -95,7 +95,7 @@ class QA(models.Model):
     name = models.CharField(max_length=45, help_text='QA name')
     description = models.TextField(help_text='QA Description')
     paname = models.CharField(max_length=45, help_text='Associate PA name')
-    metric = JSONField(decoder=None, help_text='JSON structure with the QA result')
+    metric = JSONField(help_text='JSON structure with the QA result')
     job = models.ForeignKey(Job)
 
     def __str__(self):

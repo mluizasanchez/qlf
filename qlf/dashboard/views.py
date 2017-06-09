@@ -97,7 +97,7 @@ class QAViewSet(DefaultsMixin, viewsets.ModelViewSet):
 class ExposureViewSet(DefaultsMixin, viewsets.ModelViewSet):
     """API endpoint for listing exposures"""
 
-    queryset = Exposure.objects.order_by('expid')
+    queryset = Exposure.objects.order_by('exposure_id')
     serializer_class = ExposureSerializer
 
 

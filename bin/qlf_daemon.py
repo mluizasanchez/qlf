@@ -1,15 +1,12 @@
 from dos_monitor import DOSmonitor
-from qlf_pipeline import QLFPipeline
-from qlf_models import QLFModels
+from qlf_models import get_last_exposure
 from time import sleep
 from multiprocessing import Process, Event
-# from dashboard.bokeh.helper import get_last_exposures_by_night
-
+import logging
 import Pyro4
 import configparser
 import sys
 import os
-import logging
 
 qlf_root = os.getenv('QLF_ROOT')
 cfg = configparser.ConfigParser()
@@ -18,10 +15,16 @@ try:
     cfg.read('%s/qlf/config/qlf.cfg' % qlf_root)
     logfile = cfg.get("main", "logfile")
     loglevel = cfg.get("main", "loglevel")
+    parallel_ingestion = cfg.getboolean("main", "parallel_ingestion")
 except Exception as error:
     print(error)
     print("Error reading  %s/qlf/config/qlf.cfg" % qlf_root)
     sys.exit(1)
+
+if parallel_ingestion:
+    from qlf_pipeline import JobsParallelIngestion as QLFPipeline
+else:
+    from qlf_pipeline import Jobs as QLFPipeline
 
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s]: %(message)s",
@@ -32,24 +35,25 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 class QLFRun(Process):
 
     def __init__(self):
-        Process.__init__(self)
+        super().__init__()
+        self.running = Event()
         self.exit = Event()
         self.dos_monitor = DOSmonitor()
         self.last_night = str()
-        self.running = Event()
 
         # TODO: get last night from db (improve)
-        models = QLFModels()
-        exposure = models.get_last_exposure()
+        exposure = get_last_exposure()
 
         if exposure:
             self.last_night = exposure.night
 
     def run(self):
         self.clear()
+
         while not self.exit.is_set():
             night = self.dos_monitor.get_last_night()
 
@@ -67,8 +71,12 @@ class QLFRun(Process):
 
                 self.running.set()
                 ql = QLFPipeline(exposure)
+                logger.info('Executing expid %s...' % exposure.get('expid'))
                 ql.start_process()
                 logger.info('Executing expid %s...' % exposure.get('expid'))
+                ql.start_jobs()
+                logger.info('Executing expid %s...' % exposure.get('expid'))
+                ql.finish_process()
 
             self.running.clear()
             self.last_night = night

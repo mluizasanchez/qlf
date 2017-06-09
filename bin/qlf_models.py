@@ -1,9 +1,13 @@
 import os
 import sys
-# import yaml
+import yaml
+import glob
 import json
 import numpy
 import django
+import logging
+
+logger = logging.getLogger(__name__)
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
@@ -19,165 +23,167 @@ from dashboard.models import (
     Job, Exposure, Camera, QA, Process, Configuration
 )
 
+def insert_exposure(expid, night):
+    """ Inserts and gets exposure and night if necessary. """
 
-class QLFModels(object):
-    """ Class responsible by manage the database models from Quick Look pipeline. """
+    # Check if expid is already registered
+    if not Exposure.objects.filter(exposure_id=expid):
+        exposure = Exposure(exposure_id=expid, night=night)
+        exposure.save()
 
-    def insert_exposure(self, expid, night):
-        """ Inserts and gets exposure and night if necessary. """
+    # Save Process for this exposure
+    return Exposure.objects.get(exposure_id=expid)
 
-        # Check if expid is already registered
-        if not Exposure.objects.filter(expid=expid):
-            exposure = Exposure(expid=expid, night=night)
-            exposure.save()
+def insert_process(expid, night, start, pipeline_name):
+    """ Inserts initial data in process table. """
 
-        # Save Process for this exposure
-        return Exposure.objects.get(expid=expid)
+    exposure = insert_exposure(expid, night)
 
-    def insert_process(self, expid, night, start, pipeline_name):
-        """ Inserts initial data in process table. """
+    process = Process(
+        exposure_id=exposure.exposure_id,
+        start=start,
+        pipeline_name=pipeline_name
+    )
 
-        exposure = self.insert_exposure(expid, night)
+    process.save()
 
-        process = Process(
-            exposure_id=exposure.expid,
-            start=start,
-            pipeline_name=pipeline_name
+    return process
+
+def insert_config(process_id):
+    """ Inserts used configuration. """
+
+    # TODO: get configuration coming of interface
+    # Make sure there is a configuration to refer to
+    if not Configuration.objects.all():
+        config_file = open('../qlf/static/ql.json', 'r')
+        config_str = config_file.read()
+        config_file.close()
+
+        config_json = jsonify(json.loads(config_str))
+
+        configuration = Configuration(
+            configuration=config_json,
+            process_id=process_id
         )
 
-        process.save()
+        configuration.save()
 
-        return process
+    return Configuration.objects.latest('pk')
 
-    def insert_config(self, process_id):
-        """ Inserts used configuration. """
+def insert_camera(camera):
+    """ Inserts used camera. """
 
-        # TODO: get configuration coming of interface
-        # Make sure there is a configuration to refer to
-        if not Configuration.objects.all():
-            config_file = open('../qlf/static/ql.json', 'r')
-            config_str = config_file.read()
-            config_file.close()
-
-            config_json = self.jsonify(json.loads(config_str))
-
-            configuration = Configuration(
-                configuration=config_json,
-                process_id=process_id
-            )
-
-            configuration.save()
-
-        return Configuration.objects.latest('pk')
-
-    def insert_camera(self, camera):
-        """ Inserts used camera. """
-
-        # Check if camera is already registered
-        if not Camera.objects.filter(camera=camera):
-            camera_obj = Camera(
-                camera=camera,
-                arm=camera[0],
-                spectrograph=camera[-1]
-            )
-            camera_obj.save()
-
-        # Save Job for this camera
-        return Camera.objects.get(camera=camera)
-
-    def insert_job(self, process_id, camera, start, logname, version='1.0'):
-        """ Insert job and camera if necessary. """
-
-        camera = self.insert_camera(camera)
-
-        job = Job(
-            process_id=process_id,
-            camera_id=camera,
-            start=start,
-            logname=logname,
-            version=version
+    # Check if camera is already registered
+    if not Camera.objects.filter(camera=camera):
+        camera_obj = Camera(
+            camera=camera,
+            arm=camera[0],
+            spectrograph=camera[-1]
         )
-        job.save()
+        camera_obj.save()
 
-        return job
+    # Save Job for this camera
+    return Camera.objects.get(camera=camera)
 
-    def update_process(self, process_id, end, status):
-        """ Updates process with execution results. """
+def insert_job(process_id, camera, start, logname, version='1.0'):
+    """ Insert job and camera if necessary. """
 
-        process = Process.objects.filter(id=process_id).update(
-            end=end,
-            status=status
+    camera = insert_camera(camera)
+
+    job = Job(
+        process_id=process_id,
+        camera_id=camera,
+        start=start,
+        logname=logname,
+        version=version
+    )
+    job.save()
+
+    return job
+
+def update_process(process_id, end, process_dir, status):
+    """ Updates process with execution results. """
+
+    process = Process.objects.filter(id=process_id).update(
+        end=end,
+        process_dir=process_dir,
+        status=status
+    )
+
+    return process
+
+def update_job(job_id, end, status, output_path):
+    """ Updates job with execution results. """
+
+    Job.objects.filter(id=job_id).update(
+        end=end,
+        status=status
+    )
+
+    for product in glob.glob(output_path):
+        qa = yaml.load(open(product, 'r'))
+        name = os.path.basename(product)
+
+        if 'PANAME' in qa and 'METRICS' in qa:
+            paname = qa['PANAME']
+            metrics = jsonify(qa['METRICS'])
+
+            logger.info("Ingesting %s" % name)
+            insert_qa(name, paname, metrics, job_id)
+
+    logger.info('Job {} updated.'.format(job_id))
+
+def insert_qa(name, paname, metrics, job_id, force=False):
+    """ Inserts or updates qa table. """
+
+    if not QA.objects.filter(name=name):
+        # Register for QA results for the first time
+        qa = QA(
+            name=name,
+            description='',
+            paname=paname,
+            metric=metrics,
+            job_id=job_id
+        )
+        qa.save()
+
+    elif force:
+        # Overwrite QA results
+        QA.objects.filter(name=name).update(
+            job_id=job_id,
+            description='',
+            paname=paname,
+            metric=metrics
+        )
+    else:
+        print(
+            "{} results already registered. "
+            "Use --force to overwrite.".format(name)
         )
 
-        return process
+def get_expid_in_process(expid):
+    """ gets process object by expid """
 
-    def update_job(self, job_id, end, status):
-        """ Updates job with execution results. """
+    return Process.objects.filter(exposure_id=expid)
 
-        job = Job.objects.filter(id=job_id).update(
-            end=end,
-            status=status
-        )
+def get_last_exposure():
+    """ gets last processed exposures """
 
-        return job
+    try:
+        exposure = Exposure.objects.latest('pk')
+    except:
+        exposure = None
 
-    def insert_qa(self, name, paname, metrics, job_id, force=False):
-        """ Inserts or updates qa table """
+    return exposure
 
-        metrics = self.jsonify(metrics)
+def jsonify(data):
+    """ Make a dictionary with numpy arrays JSON serializable """
 
-        if not QA.objects.filter(name=name):
-            # Register for QA results for the first time
-            qa = QA(
-                name=name,
-                description='',
-                paname=paname,
-                metric=metrics,
-                job_id=job_id
-            )
-            qa.save()
-        elif force:
-            # Overwrite QA results
-            QA.objects.filter(name=name).update(
-                job_id=job_id,
-                description='',
-                paname=paname,
-                metric=metrics
-            )
-        else:
-            print(
-                "{} results already registered. "
-                "Use --force to overwrite.".format(name)
-            )
+    for key in data:
+        if type(data[key]) == numpy.ndarray:
+            data[key] = data[key].tolist()
 
-    def get_expid_in_process(self, expid):
-        """ gets process object by expid """
-
-        return Process.objects.filter(exposure_id=expid)
-
-    def get_last_exposure(self):
-        """ gets last processed exposures """
-
-        try:
-            exposure = Exposure.objects.latest('pk')
-        except:
-            exposure = None
-
-        return exposure
-
-    @staticmethod
-    def jsonify(data):
-        """ Make a dictionary with numpy arrays JSON serializable """
-
-        for key in data:
-            if type(data[key]) == numpy.ndarray:
-                data[key] = data[key].tolist()
-
-        return data
-
-
-if __name__=='__main__':
-    qlf = QLFModels()
+    return data
 
 # TODO: implement command line interface for qlf_models.py
 # if __name__=='__main__':

@@ -12,7 +12,7 @@ QLF_API_URL = os.environ.get('QLF_API_URL',
                              'http://localhost:8000/dashboard/api')
 
 # Get url query args
-args = get_url_args(curdoc, defaults={'expid': '3'})
+args = get_url_args(curdoc, defaults={'exposure_id': '3'})
 
 # get the data
 data = get_data(name='ql-snr-z0-00000003.yaml')
@@ -41,7 +41,7 @@ star = ColumnDataSource(data={'x': data.STAR_SNR_MAG[1],
 
 # configure bokeh widgets
 exposure = get_exposure_info()
-slider = Slider(start=exposure['expid'][0], end=exposure['expid'][-1], value=exposure['expid'][0], step=1,
+slider = Slider(start=exposure['exposure_id'][0], end=exposure['exposure_id'][-1], value=exposure['exposure_id'][0], step=1,
                              title="Exposure ID")
 
 # we can filter by spectrograph
