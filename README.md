@@ -101,6 +101,39 @@ See a presentation from June 2017 [here](https://desi.lbl.gov/DocDB/cgi-bin/priv
     
     NOTE: you can follow the progress of the data processing watching `qlf.log` or from the web application.
 
+
+### Deployment using Docker
+
+In order to deploy a production instance of QLF you can build a new docker image or use an existing one:
+
+```
+    1. Create a docker image 
+    
+    git clone https://github.com/desihub/qlf.git
+    git clone https://github.com/desihub/desispec.git
+    git clone https://github.com/desihub/desiutil.git
+
+    # Test data
+    mkdir spectro 
+    cd spectro
+
+    wget -c http://portal.nersc.gov/project/desi/data/quicklook/20170428_small.tar.gz
+    tar xvzf 20170428_small.tar.gz
+    
+    # Build the image and push to lineait docker hub organization
+    
+    docker build -t lineait/qlf:v0.5 .
+    
+    2. Push the new image to docker hub
+    
+    docker push lineait/qlf:v0.5
+    
+   
+
+```
+
+
+
 ### Support
 
 
