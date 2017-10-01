@@ -2,6 +2,11 @@ from bokeh.plotting import figure, output_file, curdoc
 from bokeh.models import ColumnDataSource, LabelSet, Label
 from bokeh.driving import count
 from dashboard.bokeh.helper import get_last_process
+from bokeh.models import RadioGroup, Div
+from bokeh.layouts import widgetbox, row, column, gridplot
+from bokeh.charts import Donut
+import pandas as pd
+from bokeh.charts.utils import df_from_json
 
 import configparser
 import os
@@ -62,7 +67,84 @@ for cam in cameras:
 sourceBar = ColumnDataSource(dict(y=[0], right=[0], height=[0], color=['#0000FF']))
 
 plot.hbar(y='y', right='right', height='height', color='color', source=sourceBar)
-curdoc().add_root(plot)
+# curdoc().add_root(plot)
+reduct_mode = widgetbox(Div(text="<b>Reduction Mode:</b>"))
+
+radio = RadioGroup(labels=['Manual', 'Automatic'], active=1)
+column_mode = column(reduct_mode, widgetbox(radio))
+
+exposure_label = widgetbox(Div(text="<b>Exposure Id:</b>"))
+exposure = widgetbox(Div(text="999999999"))
+column_exposure = column(exposure_label, exposure)
+
+date_label = widgetbox(Div(text="<b>Date:</b>"))
+date = widgetbox(Div(text="MM/DD/YYYYY"))
+column_date = column(date_label, date)
+
+time_label = widgetbox(Div(text="<b>Time:</b>"))
+time = widgetbox(Div(text="HH:MM:SS"))
+column_time = column(time_label, time)
+
+curdoc().add_root(row(column_mode,column_exposure,column_date,column_time))
+
+wedge = {'data': [{'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1 }]}
+
+df = df_from_json(wedge)
+df = pd.melt(df,
+             value_vars=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+             value_name='number', var_name='spectrograph')
+
+circle_size =150
+
+wedge_b = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_r = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_z = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+
+wedge_b.toolbar_location = None
+wedge_r.toolbar_location = None
+wedge_z.toolbar_location = None
+
+wedge_b_spectra = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_r_spectra = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_z_spectra = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+
+wedge_b_spectra.toolbar_location = None
+wedge_r_spectra.toolbar_location = None
+wedge_z_spectra.toolbar_location = None
+
+wedge_b_fiber = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_r_fiber = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_z_fiber = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+
+wedge_b_fiber.toolbar_location = None
+wedge_r_fiber.toolbar_location = None
+wedge_z_fiber.toolbar_location = None
+
+wedge_b_sky = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_r_sky = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+wedge_z_sky = Donut(df, plot_height=circle_size, plot_width=circle_size, color=["green"] * 30)
+
+wedge_b_sky.toolbar_location = None
+wedge_r_sky.toolbar_location = None
+wedge_z_sky.toolbar_location = None
+
+pre_proc = widgetbox(Div(text="<b>Pre Processing:</b>"))
+layout_1 = row(wedge_b, wedge_r, wedge_z)
+group_1 = column(pre_proc, layout_1)
+spec_proc = widgetbox(Div(text="<b>Spectra Extraction:</b>"))
+layout_2 = row(wedge_b_spectra, wedge_r_spectra, wedge_z_spectra)
+group_2 = column(spec_proc, layout_2)
+
+fiber_proc = widgetbox(Div(text="<b>Fiber Flattening:</b>"))
+layout_3 = row(wedge_b_fiber, wedge_r_fiber, wedge_z_fiber)
+group_3 = column(fiber_proc, layout_3)
+
+sky_proc = widgetbox(Div(text="<b>Sky Subtraction:</b>"))
+layout_4 = row(wedge_b_sky, wedge_r_sky, wedge_z_sky)
+group_4 = column(sky_proc, layout_4)
+
+curdoc().add_root(row(group_1, group_2))
+curdoc().add_root(row(group_3, group_4))
 
 @count()
 def update(t):
