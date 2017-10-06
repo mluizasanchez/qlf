@@ -136,7 +136,7 @@ if expid:
 
 # TODO: for now it is fixed for the SNR metric which will open the SNR vs. Mag plot
 
-url = "/dashboard/qasnr?exposure={}&arm=@arm&spectrograph=@spectrograph".format(expid)
+url = "/dashboard/preproc?exposure={}&arm=@arm&spectrograph=@spectrograph".format(expid)
 
 taptool = p.select(type=TapTool)
 taptool.callback = OpenURL(url=url)
