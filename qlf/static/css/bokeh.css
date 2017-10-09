@@ -1,0 +1,96 @@
+.bk-widget-box.bk-layout-fixed {
+    width: auto !important;
+}
+
+.bk-grid-row.bk-layout-fixed {
+    width: auto !important;
+    height: auto !important;
+}
+
+.ui-state-default.slick-header-column.slick-header-sortable {
+    border-right: 0 !important;
+}
+
+.bk-grid-column.bk-layout-scale_height {
+    width: auto !important;
+    height: auto !important;
+}
+
+.bk-grid-row.bk-layout-scale_height {
+    width: auto !important;
+    /* height: auto !important; */
+}
+
+.bk-grid-column.bk-layout-fixed {
+    width: auto !important;
+    height: auto !important;
+}
+
+.container {
+    width: auto !important;
+}
+
+.top_controls {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    flex-direction: row;
+    align-content: center;
+    justify-content: space-around;
+    height: 170px !important;
+    border: 1px solid #000;
+    margin-top: 20px;
+}
+
+.general_console{
+    padding: 5px;
+    height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    border: 1px solid black;
+    width: 600px;
+}
+
+.consoles {
+    float: left !important;
+}
+
+.stages {
+    margin-top: 20px;
+    padding-left: 50px;
+    display: flex;
+    align-items: center;
+}
+
+.band_label {
+    padding-right: 30px;
+}
+
+.success_stage {
+    background-color: green;
+}
+
+.error_stage {
+    background-color: red;
+}
+
+.processing_stage {
+    background-color: #D9FF00;    
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #DFDFDF;
+}

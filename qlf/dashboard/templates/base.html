@@ -11,6 +11,7 @@
     <!-- Custom styles for this template -->
     <link href="{% static 'css/font-awesome.min.css' %}" rel="stylesheet">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bokeh.css' %}" rel="stylesheet">
 
     <script>
         function btn_click(btn) {
@@ -40,9 +41,6 @@
             </ul>
             {% if "monitor" in bokeh_app %}
                 <ul class="nav navbar-nav navbar-left">
-                    <button class="btn btn-success navbar-btn" onclick="btn_click('/start')"><i class="fa fa-play"></i><b> START</b></button>
-                    <button class="btn btn-danger navbar-btn" onclick="btn_click('/stop')"><i class="fa fa-stop"></i><b> STOP</b></button>
-                    <button class="btn btn-warning navbar-btn" onclick="btn_click('/restart')"><i class="fa fa-refresh"></i><b> RESET</b></button>
                     <p class="nav navbar-nav navbar-text pull-left">
                         <b> STATUS:
                             {% if messages %}

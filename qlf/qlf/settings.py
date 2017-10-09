@@ -101,5 +101,5 @@ BOKEH_URL='http://{}:{}'.format(
 QLF_DAEMON_URL='PYRO:{}@{}:{}'.format(
     os.environ.get('QLF_DAEMON_NS', 'qlf.daemon'),
     os.environ.get('QLF_DAEMON_HOST', 'localhost'),
-    str(os.environ.get('QLF_DAEMON_PORT', 56005))
+    str(os.environ.get('QLF_DAEMON_PORT', 56006))
 )

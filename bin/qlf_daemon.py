@@ -120,7 +120,7 @@ def main():
     try:
         nameserver = os.environ.get('QLF_DAEMON_NS', 'qlf.daemon')
         host = os.environ.get('QLF_DAEMON_HOST', 'localhost')
-        port = int(os.environ.get('QLF_DAEMON_PORT', '56005'))
+        port = int(os.environ.get('QLF_DAEMON_PORT', '56006'))
     except Exception as err:
         logger.error(err)
         sys.exit(1)
