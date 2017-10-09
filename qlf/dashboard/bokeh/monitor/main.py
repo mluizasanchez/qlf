@@ -19,6 +19,7 @@ import fcntl, os
 import datetime
 import time
 import copy
+
 from dashboard.bokeh.utils.outputs import Outputs
 
 logger = logging.getLogger(__name__)
@@ -49,8 +50,9 @@ for num in range(30):
 time_widget = Div(text="")
 date_widget = Div(text="")
 exposure = Div(text="")
+status = Div(text="")
 
-curdoc().add_root(Outputs.create_header(time_widget, date_widget, exposure))
+curdoc().add_root(Outputs.create_header(time_widget, date_widget, exposure, status))
 
 # Main console widget
 activate_main_console = CheckboxGroup(labels=['Scroll End'], active=[0])
@@ -79,6 +81,7 @@ console_html = []
 def update(t):
     date_widget.text = datetime.datetime.now().strftime("%Y-%m-%d")
     time_widget.text = datetime.datetime.now().strftime("%H:%M:%S")
+    status.text = "Not available"
     log_messages = ""
     while True:
         new_line = ''

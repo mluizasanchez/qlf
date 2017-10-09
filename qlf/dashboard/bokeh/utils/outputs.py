@@ -95,7 +95,13 @@ class Outputs():
             xhttp.send();
         """)
 
-    def create_header(time_widget, date_widget, exposure):
+    def open_window(attributes=[]):
+        "Build a suitable CustomJS to display the current event in the div model."
+        return CustomJS(args=dict(attrs=attributes), code="""
+            window.open(attrs.data.event[0],'_blank');
+        """)
+
+    def create_header(time_widget, date_widget, exposure, status):
         reduct_mode = widgetbox(Div(text="<b>Reduction Mode:</b>"))
 
         radio = RadioGroup(labels=['Manual', 'Automatic'], active=1)
@@ -106,6 +112,9 @@ class Outputs():
         exposure_label = Div(text="<b>Exposure Id:</b>")
         column_exposure = column(exposure_label, exposure)
 
+        status_label = Div(text="<b>Status:</b>")
+        status_column = column(status_label, status)
+
         date_label = Div(text="<b>Date:</b>")
         column_date = column(date_label, date_widget)
 
@@ -115,15 +124,19 @@ class Outputs():
         controls = []
         controls.append(Button(label='START', button_type="success", width=50))
         controls.append(Button(label='STOP', button_type="danger", width=50))
-        controls.append(Button(label='RESET', button_type="success", width=50))
+        controls.append(Button(label='RESET', button_type="warning", width=50))
+        controls.append(Button(label='QA', button_type="primary", width=50))
 
         for index, event in enumerate(['/start', '/stop', '/restart']):
             attributes = ColumnDataSource(data=dict(event=[event]))
             controls[index].js_on_event(events.ButtonClick, Outputs.dispatch_event(attributes))
 
+        attributes = ColumnDataSource(data=dict(event=['/dashboard/exposures/']))
+        controls[3].js_on_event(events.ButtonClick, Outputs.open_window(attributes))
+
         buttons = column(*controls)
 
-        return row(buttons, column_mode,column_exposure,column_date,column_time, sizing_mode='scale_height', css_classes=['top_controls'])
+        return row(buttons, column_mode, status_column, column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
 
     def create_console(checkbox, console_name):
         main_log = widgetbox(Div(text="<textarea id=\"textarea-general\" style=\"height: 400px;width: 1000px;\"></textarea>"), name=console_name)
