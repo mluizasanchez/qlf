@@ -8,6 +8,9 @@ from bokeh.charts import Donut
 
 from dashboard.bokeh.helper import get_exposures, get_cameras
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Get the list of exposures
 exposures = get_exposures()
@@ -45,7 +48,7 @@ hover = HoverTool(tooltips=[("Camera", "@camera"), ("Status", "@status")])
 # open the drill down plots associated to the selected metric
 
 p = figure(x_range=(-1, 10), y_range=(0.5, 3.9), tools=[hover, 'tap'])
-p.logo = None
+# p.logo = None
 p.toolbar_location = None
 
 # Now we configure the camera column data source, each element of the column datasource
@@ -182,9 +185,9 @@ wedge_b = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
 wedge_r = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
 wedge_z = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
 
-wedge_b.logo = None
-wedge_r.logo = None
-wedge_z.logo = None
+# wedge_b.logo = None
+# wedge_r.logo = None
+# wedge_z.logo = None
 
 wedge_b.toolbar_location = None
 wedge_r.toolbar_location = None
