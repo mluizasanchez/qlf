@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework import authentication, permissions, viewsets, filters, status
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
-
+from rest_framework.decorators import api_view
 
 from django.db.models import Max, Min
 from django.db.models import Q
@@ -260,6 +260,15 @@ def stop(request):
 def restart(request):
     qlf.restart()
     return HttpResponseRedirect('dashboard/monitor')
+
+@api_view(['GET'])
+def status(request):
+    status = qlf.get_status()
+    if status:
+        status_message = 'Running'
+    else:
+        status_message = 'Idle'
+    return Response(dict({'status': status_message}))
 
 def observing_history(request):
     exposure = Exposure.objects.all()

@@ -1,7 +1,7 @@
 from bokeh.plotting import figure, output_file, curdoc
 from bokeh.models import ColumnDataSource, LabelSet, Label
 from bokeh.driving import count
-from dashboard.bokeh.helper import get_last_process
+from dashboard.bokeh.helper import get_last_process, get_status
 from bokeh.models import CustomJS, RadioGroup, Div, CheckboxGroup, Button
 from bokeh.layouts import widgetbox, row, column, gridplot, layout, Spacer
 import pandas as pd
@@ -55,7 +55,7 @@ status = Div(text="")
 curdoc().add_root(Outputs.create_header(time_widget, date_widget, exposure, status))
 
 # Main console widget
-activate_main_console = CheckboxGroup(labels=['Scroll End'], active=[0])
+activate_main_console = CheckboxGroup(labels=['Start Monitoring'], active=[0])
 main_console = Outputs.create_console(activate_main_console, "main_log")
 
 # Injection console widget
@@ -63,7 +63,9 @@ activate_inject_console = CheckboxGroup(labels=['Scroll End'], active=[0])
 inject_console = Outputs.create_console(activate_inject_console, "inject")
 
 consoles = column(main_console, inject_console, css_classes=["consoles"])
+curdoc().add_root(activate_main_console)
 curdoc().add_root(consoles)
+
 
 # Stages tables
 stages = Outputs.create_stages()
@@ -79,9 +81,11 @@ console_html = []
 
 @count()
 def update(t):
-    date_widget.text = datetime.datetime.now().strftime("%Y-%m-%d")
-    time_widget.text = datetime.datetime.now().strftime("%H:%M:%S")
-    status.text = "Not available"
+    if activate_main_console._property_values['active'] != [0]:
+        return
+    date_widget.text = "<p class=\"date_label\">" + datetime.datetime.now().strftime("%Y-%m-%d") + "</p>"
+    time_widget.text = "<p class=\"time_label\">" + datetime.datetime.now().strftime("%H:%M:%S") + "</p>"
+    status.text = "<p class=\"status_label\">" + get_status()['status'] + "</p>"
     log_messages = ""
     while True:
         new_line = ''
@@ -89,26 +93,20 @@ def update(t):
             new_line = f.stdout.read()
             line_array = new_line.strip().decode('utf-8').split('\n')
             for eacharray in line_array:
-                console_html.append("<p>"+ eacharray +"</p>")
+                console_html.append(eacharray +"\n")
         except:
             break
     for line in reversed(console_html):
         log_messages += line
 
-    new_child = [Div(text="<div class=\"general_console\">" + log_messages + "</div>")]
+    # if activate_main_console._property_values['active'] != []:
+    new_child = [Div(text="<textarea class=\"general_console\" disabled>" + copy.copy(log_messages) + "</textarea>")]
+    curdoc().set_select({"name": "main_log"}, {"children": new_child})
 
-    if activate_main_console._property_values['active'] != []:
-        curdoc().set_select({"name": "main_log"}, {"children": new_child})
+    # new_child = [Div(text="<div class=\"general_console\"></div>")]
 
-    new_child = [Div(text="<div class=\"general_console\"></div>")]
-
-    if activate_inject_console._property_values['active'] != []:
-        curdoc().set_select({"name": "inject"}, {"children": new_child})
-
-    barsRight = list()
-
-    for num in range(30):
-        barsRight.append(0)
+    # if activate_inject_console._property_values['active'] != []:
+    #     curdoc().set_select({"name": "inject"}, {"children": new_child})
 
     proc_finished = False
 
@@ -125,7 +123,8 @@ def update(t):
 
         PROCESS = process
         exp_id = PROCESS.get("exposure")
-        exposure.text = str(exp_id)
+        exposure.text = "<p class=\"exposure_label\">" + str(exp_id) + "</p>"
+
     stages = Outputs.create_stages()
     curdoc().set_select({"name": "stage_table_r"}, {"children": [stages[0], stages[1]]})
     curdoc().set_select({"name": "stage_table_b"}, {"children": [stages[2], stages[3]]})

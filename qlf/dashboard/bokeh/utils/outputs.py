@@ -46,7 +46,7 @@ class Outputs():
             logger.error("Error reading  %s/qlf/config/qlf.cfg" % qlf_root)
         try:
             logfile = cfg.get('main', filename)
-            return subprocess.Popen(['tail','-F', logfile],\
+            return subprocess.Popen(['tail', '+2','-F', logfile],\
                     stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
         except Exception as e:
@@ -60,26 +60,26 @@ class Outputs():
         if band == 'b':
             cams_stages_b[stage]['camera'][camera] = status
 
-    def create_table(cam_stage):
+    def create_table(cam_stage, header):
         column_names = ["Pre Processing", "Spectra Extraction", "Fiber Flattening", "Sky Subtraction"]
-
-        table_text = "<table >"
-        table_text += "<tr>"
-        for column in column_names:
-            table_text += "<td>" + column + "</td>"
-        table_text += "</tr>"
+        table_text = "<table>"
+        if header:
+            table_text += "<tr>"
+            for column in column_names:
+                table_text += "<td>" + column + "</td>"
+            table_text += "</tr>"
         for camera in range(10):
             table_text += "<tr>"
             for stage in range(4):
-                table_text += "<td class=\"" + str(cam_stage[stage]['camera'][camera]) + "\"></td>"
+                table_text += "<td onclick=\"openDialog(event)\" class=\"" + str(cam_stage[stage]['camera'][camera]) + " camera_stage\"></td>"
             table_text += "</tr>"
         table_text += "</table>"
         return table_text
 
     def create_stages():
-        r_band = Div(text=Outputs.create_table(cams_stages_r))
-        b_band = Div(text=Outputs.create_table(cams_stages_b))
-        z_band = Div(text=Outputs.create_table(cams_stages_z))
+        r_band = Div(text=Outputs.create_table(cams_stages_r, True))
+        b_band = Div(text=Outputs.create_table(cams_stages_b, False))
+        z_band = Div(text=Outputs.create_table(cams_stages_z, False))
 
         r_label = Div(text="<b class=\"band_label\">R</b>")
         b_label = Div(text="<b class=\"band_label\">B</b>")
@@ -109,35 +109,32 @@ class Outputs():
 
         process = get_last_process()
 
-        exposure_label = Div(text="<b>Exposure Id:</b>")
-        column_exposure = column(exposure_label, exposure)
+        exposure_label = Div(text="<b>Exposure Id</b>")
+        column_exposure = column(exposure_label, exposure, css_classes=['column_exposure'])
 
-        status_label = Div(text="<b>Status:</b>")
-        status_column = column(status_label, status)
+        status_label = Div(text="<b>Status</b>")
+        status_column = column(status_label, status, css_classes=['column_status'])
 
-        date_label = Div(text="<b>Date:</b>")
-        column_date = column(date_label, date_widget)
+        date_label = Div(text="<b>Date</b>")
+        column_date = column(date_label, date_widget, css_classes=['column_date'])
 
-        time_label = Div(text="<b>Time:</b>")
-        column_time = column(time_label, time_widget)
+        time_label = Div(text="<b>Time</b>")
+        column_time = column(time_label, time_widget, css_classes=['column_time'])
 
         controls = []
         controls.append(Button(label='START', button_type="success", width=50))
         controls.append(Button(label='STOP', button_type="danger", width=50))
         controls.append(Button(label='RESET', button_type="warning", width=50))
-        controls.append(Button(label='QA', button_type="primary", width=50))
 
         for index, event in enumerate(['/start', '/stop', '/restart']):
             attributes = ColumnDataSource(data=dict(event=[event]))
             controls[index].js_on_event(events.ButtonClick, Outputs.dispatch_event(attributes))
 
-        attributes = ColumnDataSource(data=dict(event=['/dashboard/exposures/']))
-        controls[3].js_on_event(events.ButtonClick, Outputs.open_window(attributes))
+        buttons = column(*controls, css_classes=["btn_group"])
 
-        buttons = column(*controls)
-
-        return row(buttons, column_mode, status_column, column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
+        return row(buttons, status_column, column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
 
     def create_console(checkbox, console_name):
-        main_log = widgetbox(Div(text="<textarea id=\"textarea-general\" style=\"height: 400px;width: 1000px;\"></textarea>"), name=console_name)
-        return column(row(main_log), row(checkbox), css_classes=["main_console"])
+        main_log = widgetbox(Div(text="<textarea textarea class=\"general_console\" disabled></textarea>"), name=console_name)
+        # return column(row(main_log), row(checkbox), css_classes=["main_console"])
+        return column(row(main_log), css_classes=["main_console"])

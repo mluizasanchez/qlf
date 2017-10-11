@@ -17,6 +17,14 @@
         function btn_click(btn) {
             window.open(btn, "_self")
         }
+        function openDialog(evt) {
+            document.getElementById("myDialog").open = true;
+            $("#myDialog").dialog({ position: { my: "center", at: "top" } });
+        }
+
+        function closeDialog(evt) {
+            document.getElementById("myDialog").open = false;
+        }
     </script>
 </head>
 <body>
