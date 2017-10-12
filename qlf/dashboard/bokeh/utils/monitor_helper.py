@@ -34,7 +34,7 @@ for i in range(4):
 cams_stages_b = copy.deepcopy(cams_stages_r)
 cams_stages_z = copy.deepcopy(cams_stages_r)
 
-class Outputs():
+class MonitorHelper():
     def open_stream(filename):
         qlf_root = os.getenv('QLF_ROOT')
         cfg = configparser.ConfigParser()
@@ -77,9 +77,9 @@ class Outputs():
         return table_text
 
     def create_stages():
-        r_band = Div(text=Outputs.create_table(cams_stages_r, True))
-        b_band = Div(text=Outputs.create_table(cams_stages_b, False))
-        z_band = Div(text=Outputs.create_table(cams_stages_z, False))
+        r_band = Div(text=MonitorHelper.create_table(cams_stages_r, True))
+        b_band = Div(text=MonitorHelper.create_table(cams_stages_b, False))
+        z_band = Div(text=MonitorHelper.create_table(cams_stages_z, False))
 
         r_label = Div(text="<b class=\"band_label\">R</b>")
         b_label = Div(text="<b class=\"band_label\">B</b>")
@@ -121,6 +121,11 @@ class Outputs():
         time_label = Div(text="<b>Time</b>")
         column_time = column(time_label, time_widget, css_classes=['column_time'])
 
+
+
+        return row(status_column, column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
+
+    def create_controls():
         controls = []
         controls.append(Button(label='START', button_type="success", width=50))
         controls.append(Button(label='STOP', button_type="danger", width=50))
@@ -128,11 +133,10 @@ class Outputs():
 
         for index, event in enumerate(['/start', '/stop', '/restart']):
             attributes = ColumnDataSource(data=dict(event=[event]))
-            controls[index].js_on_event(events.ButtonClick, Outputs.dispatch_event(attributes))
+            controls[index].js_on_event(events.ButtonClick, MonitorHelper.dispatch_event(attributes))
 
         buttons = column(*controls, css_classes=["btn_group"])
-
-        return row(buttons, status_column, column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
+        return row(buttons, sizing_mode='scale_height', css_classes=['top_controls'])
 
     def create_console(checkbox, console_name):
         main_log = widgetbox(Div(text="<textarea textarea class=\"general_console\" disabled></textarea>"), name=console_name)

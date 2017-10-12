@@ -9,8 +9,11 @@ from bokeh.charts import Donut
 from dashboard.bokeh.helper import get_exposures, get_cameras
 import pandas as pd
 import logging
-
+from bokeh import events
+from bokeh.models import CustomJS
 logger = logging.getLogger(__name__)
+from dashboard.bokeh.utils.graphs_helper import GraphsHelper
+import datetime
 
 # Get the list of exposures
 exposures = get_exposures()
@@ -174,36 +177,65 @@ metric_select.on_change('active', wedge_update)
 
 # Wedge plots (layout)
 
-wedge = {'data': [{'0': 1, '1': 1, '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1 }]}
+wedge = {'data': [{'0': 1, '1': 1, '2': 1, '3': 2, '4': 1, '5': 1, '6': 1, '7': 1, '8': 1, '9': 1 }]}
 
 df = df_from_json(wedge)
 df = pd.melt(df,
              value_vars=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
              value_name='number', var_name='spectrograph')
 
-wedge_b = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
-wedge_r = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
-wedge_z = Donut(df, plot_height=220, plot_width=220, color=source.data['color'])
+size_donut=120
 
-# wedge_b.logo = None
-# wedge_r.logo = None
-# wedge_z.logo = None
+wedge_b = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
+wedge_r = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
+wedge_z = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
 
-wedge_b.toolbar_location = None
-wedge_r.toolbar_location = None
-wedge_z.toolbar_location = None
+def open_window(attributes=[]):
+    "Build a suitable CustomJS to display the current event in the div model."
+    return CustomJS(args=dict(attrs=attributes), code="""
+        window.open(attrs.data.event[0],'_blank');
+    """)
 
-curdoc().add_root(row(widgetbox(title, width=700)))
+attributes = ColumnDataSource(data=dict(event=['/dashboard/graphs/']))
 
-curdoc().add_root(row(widgetbox(slider, width=700)))
+all_wedges = [*wedge_b, *wedge_r, *wedge_z]
 
-curdoc().add_root(row(column(widgetbox(Div(text="<b>Cameras:</b>")),
-                      p,
-                      row(widgetbox(Div(text=""), width=50),
-                          widgetbox(wedge_metric_select, width=600))),
-                      column(widgetbox(Div(text="<b>Metrics:</b>"), width=150),
-                             widgetbox(metric_select, width=150))))
+for w in all_wedges:
+    w.js_on_event(events.Tap, open_window(attributes))
 
-curdoc().add_root(row(wedge_b, wedge_r, wedge_z))
+# curdoc().add_root(row(widgetbox(title, width=700)))
+
+# curdoc().add_root(row(widgetbox(slider, width=700)))
+
+# curdoc().add_root(row(column(widgetbox(Div(text="<b>Cameras:</b>")),
+#                       p,
+#                       row(widgetbox(Div(text=""), width=50),
+#                           widgetbox(wedge_metric_select, width=600))),
+#                       column(widgetbox(Div(text="<b>Metrics:</b>"), width=150),
+#                              widgetbox(metric_select, width=150))))
+
+label_b = Div(text="<b>b</b>")
+label_r = Div(text="<b>r</b>")
+label_z = Div(text="<b>z</b>")
+
+b_column = column(*wedge_b, label_b)
+r_column = column(*wedge_r, label_r)
+z_column = column(*wedge_z, label_z)
+
+# Header Variables
+time_widget = Div(text="")
+date_widget = Div(text="")
+exposure = Div(text="")
+
+date_widget.text = "<p class=\"date_label\">" + datetime.datetime.now().strftime("%Y-%m-%d") + "</p>"
+time_widget.text = "<p class=\"time_label\">" + datetime.datetime.now().strftime("%H:%M:%S") + "</p>"
+
+header_row = row(GraphsHelper.create_header(time_widget, date_widget, exposure))
+
+wedges_row = row(b_column, r_column, z_column)
+
+step_box = Div(text="<p class=\"metrix_box\">Step</p>")
+
+curdoc().add_root(row(step_box, column(header_row, wedges_row)))
 
 curdoc().title = "Exposures"
