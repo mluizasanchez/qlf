@@ -23,7 +23,7 @@
 
 .bk-grid-column.bk-layout-fixed {
     width: auto !important;
-    /* height: auto !important; */
+    height: auto !important;
 }
 
 .container {
@@ -31,16 +31,19 @@
 }
 
 .top_controls {
+    z-index: 15;
     display: flex;
+    justify-content: space-around;
+    /* display: flex;
     flex-flow: row wrap;
     align-items: center;
     flex-direction: row;
     align-content: center;
     justify-content: space-around;
     height: 220px !important;
-    /* border: 1px solid #000; */
+    border: 1px solid #000;
     margin-top: 20px;
-    border: 10px solid transparent;
+    border: 10px solid transparent; */
 }
 
 .btn_group {
@@ -51,15 +54,25 @@
     margin-top: 0px !important;
 }
 
-.column_exposure {
+.column_box {
     background-color: #fff;
     border: 1px solid transparent;
     border-radius: 3px;
     border-color: #ddd;
+}
+
+.column_exposure {
+    margin: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    border-color: #ddd;
+    min-height: 80px;
     
 }
 
 .column_date {
+    margin: 20px;
     background-color: #fff;
     border: 1px solid transparent;
     border-radius: 3px;
@@ -67,6 +80,7 @@
 }
 
 .column_time {
+    margin: 20px;
     background-color: #fff;
     border: 1px solid transparent;
     border-radius: 3px;
@@ -74,15 +88,24 @@
 }
 
 .column_status {
+    margin: 20px;
     background-color: #fff;
     border: 1px solid transparent;
     border-radius: 3px;
     border-color: #ddd;
 }
 
-.status_label{
+.status_label {
     padding: 5px;
     float: right;
+    font-size: 18px;
+    color: #333;
+}
+
+.box_label {
+    padding: 5px;
+    display: flex;
+    justify-content: center;
     font-size: 18px;
     color: #333;
 }
@@ -199,4 +222,59 @@ body {
     .navbar-header {
         float:none;
     }
+}
+
+@media (max-width: 1100px) {
+    .stages {
+        float: left;
+    }
+}
+
+.nav_buttons>button{
+    border-color: transparent !important;
+    min-width: auto !important;
+}
+
+.metric_box {
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    border-color: #ddd;
+    height: 1400px !important;
+    min-width: 170px !important;
+    margin-top: 25px !important;
+    padding: 20px;
+}
+
+.metric_button {
+    align-content: initial;
+}
+
+.graphs_box {
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    border-color: #ddd;
+    height: 400px;
+    width: 500px;
+}
+
+.right_side {
+    padding-left: 20px;
+}
+
+.bias_graph {
+    /* padding-top: 150px; */
+}
+
+.hidden {
+    display: none;
+}
+
+.step_label {
+    min-width: 125px;
+    display: flex;
+    justify-content: center;
 }

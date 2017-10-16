@@ -6,7 +6,6 @@ from bokeh.models import CustomJS, RadioGroup, Div, CheckboxGroup, Button
 from bokeh.layouts import widgetbox, row, column, gridplot, layout, Spacer
 import pandas as pd
 from bokeh.models.widgets import DataTable, TableColumn, HTMLTemplateFormatter
-from bokeh import events
 
 import configparser
 import os
@@ -20,7 +19,7 @@ import datetime
 import time
 import copy
 
-from dashboard.bokeh.utils.outputs import Outputs
+from dashboard.bokeh.utils.monitor_helper import MonitorHelper
 
 logger = logging.getLogger(__name__)
 
@@ -52,29 +51,29 @@ date_widget = Div(text="")
 exposure = Div(text="")
 status = Div(text="")
 
-curdoc().add_root(Outputs.create_header(time_widget, date_widget, exposure, status))
 
 # Main console widget
 activate_main_console = CheckboxGroup(labels=['Start Monitoring'], active=[0])
-main_console = Outputs.create_console(activate_main_console, "main_log")
+main_console = MonitorHelper.create_console(activate_main_console, "main_log")
 
 # Injection console widget
 activate_inject_console = CheckboxGroup(labels=['Scroll End'], active=[0])
-inject_console = Outputs.create_console(activate_inject_console, "inject")
+inject_console = MonitorHelper.create_console(activate_inject_console, "inject")
 
 consoles = column(main_console, inject_console, css_classes=["consoles"])
-curdoc().add_root(activate_main_console)
-curdoc().add_root(consoles)
+curdoc().add_root(row(MonitorHelper.create_controls(), MonitorHelper.create_header(time_widget, date_widget, exposure, status), css_classes=['top_controls']))
+curdoc().add_root(column(activate_main_console))
 
 
 # Stages tables
-stages = Outputs.create_stages()
+stages = MonitorHelper.create_stages()
 stage_columns = column(widgetbox(stages[0], stages[1], name="stage_table_r", css_classes=["stages"]),widgetbox(stages[2], stages[3], name="stage_table_b", css_classes=["stages"]),widgetbox(stages[4], stages[5], name="stage_table_z", css_classes=["stages"]), css_classes=["stage_columns"])
+curdoc().add_root(consoles)
 curdoc().add_root(stage_columns)
 
 r = curdoc().session_context._document
 
-f = Outputs.open_stream('logfile')
+f = MonitorHelper.open_stream('logfile')
 fcntl.fcntl(f.stdout.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
 
 console_html = []
@@ -125,7 +124,7 @@ def update(t):
         exp_id = PROCESS.get("exposure")
         exposure.text = "<p class=\"exposure_label\">" + str(exp_id) + "</p>"
 
-    stages = Outputs.create_stages()
+    stages = MonitorHelper.create_stages()
     curdoc().set_select({"name": "stage_table_r"}, {"children": [stages[0], stages[1]]})
     curdoc().set_select({"name": "stage_table_b"}, {"children": [stages[2], stages[3]]})
     curdoc().set_select({"name": "stage_table_z"}, {"children": [stages[4], stages[5]]})
@@ -146,13 +145,13 @@ def update(t):
             logger.warn(e)
 
         if "Running Preproc" in ''.join(log):
-            Outputs.update_stage(cam[:1], 0, int(cam[1:]), 'processing_stage')
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'processing_stage')
         if "Checking version SIM" in ''.join(log):
-            Outputs.update_stage(cam[:1], 1, int(cam[1:]), 'error_stage')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'error_stage')
         if "Subtracting average overscan" in ''.join(log):
-            Outputs.update_stage(cam[:1], 2, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 2, int(cam[1:]), 'success_stage')
         if "Median rdnoise and overscan" in ''.join(log):
-            Outputs.update_stage(cam[:1], 3, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 3, int(cam[1:]), 'success_stage')
             
 
 curdoc().add_periodic_callback(update, 1000)
