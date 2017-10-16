@@ -9,7 +9,6 @@ from bokeh.charts import Donut
 from dashboard.bokeh.helper import get_exposures, get_cameras
 import pandas as pd
 import logging
-from bokeh import events
 from bokeh.models import CustomJS
 logger = logging.getLogger(__name__)
 from dashboard.bokeh.utils.graphs_helper import GraphsHelper
@@ -186,9 +185,9 @@ df = pd.melt(df,
 
 size_donut=120
 
-wedge_b = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
-wedge_r = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
-wedge_z = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None) for i in range(3)]
+wedge_b = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None, tools=['tap']) for i in range(4)]
+wedge_r = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None, tools=['tap']) for i in range(4)]
+wedge_z = [Donut(df, plot_height=size_donut, plot_width=size_donut, color=source.data['color'], toolbar_location=None, tools=['tap']) for i in range(4)]
 
 def open_window(attributes=[]):
     "Build a suitable CustomJS to display the current event in the div model."
@@ -199,9 +198,10 @@ def open_window(attributes=[]):
 attributes = ColumnDataSource(data=dict(event=['/dashboard/graphs/']))
 
 all_wedges = [*wedge_b, *wedge_r, *wedge_z]
-
+logger.error(vars(wedge_b[0]))
 for w in all_wedges:
-    w.js_on_event(events.Tap, open_window(attributes))
+    w.select(type=TapTool).callback = OpenURL(url="/dashboard/graphs/")
+    logger.error(w.select(type=TapTool))
 
 # curdoc().add_root(row(widgetbox(title, width=700)))
 
@@ -234,7 +234,7 @@ header_row = row(GraphsHelper.create_header(time_widget, date_widget, exposure))
 
 wedges_row = row(b_column, r_column, z_column)
 
-step_box = Div(text="<p class=\"metrix_box\">Step</p>")
+step_box = Div(text="<p class=\"metric_box\">Step</p>")
 
 curdoc().add_root(row(step_box, column(header_row, wedges_row)))
 

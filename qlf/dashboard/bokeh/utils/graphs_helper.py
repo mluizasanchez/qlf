@@ -8,22 +8,86 @@ import logging
 logger = logging.getLogger(__name__)
 
 class GraphsHelper:
-    def on_next_press(label, options, selected):
+    def render_step_buttons(id, buttons):
+        buttons[0].label = "COUNTPIX"
+        buttons[1].label = "GETBIAS"
+        buttons[2].label = "GETRMS"
+        buttons[3].label = "XWSIGMA"
+        if id == 0:
+            buttons[0].label = "COUNTPIX"
+            buttons[1].label = "GETBIAS"
+            buttons[2].label = "GETRMS"
+            buttons[3].label = "XWSIGMA"
+            buttons[1].button_type = "success"
+            buttons[2].button_type = "success"
+            buttons[3].button_type = "success"
+        if id == 1:
+            buttons[0].label = "COUNTBINS"
+            buttons[1].button_type = "link"
+            buttons[2].button_type = "link"
+            buttons[3].button_type = "link"
+            buttons[1].label = None
+            buttons[2].label = None
+            buttons[3].label = None
+        if id == 2:
+            buttons[0].label = "INTEG"
+            buttons[1].label = "SKYCONT"
+            buttons[2].label = "SKYPEAK"
+            buttons[3].label = "SKYRESID"
+            buttons[1].button_type = "success"
+            buttons[2].button_type = "success"
+            buttons[3].button_type = "success"
+        if id == 3:
+            buttons[0].label = "SNR"
+            buttons[1].button_type = "link"
+            buttons[2].button_type = "link"
+            buttons[3].button_type = "link"
+            buttons[1].label = None
+            buttons[2].label = None
+            buttons[3].label = None
+        return buttons
+
+    def on_next_press_step(label, options, selected, buttons):
         selected['id'] = (selected['id'] + 1) % len(options)
         label.text = options[selected['id']]
+        GraphsHelper.render_step_buttons(selected['id'], buttons)
 
-    def on_previous_press(label, options, selected):
+    def on_previous_press_step(label, options, selected, buttons):
         selected['id'] = (selected['id'] - 1) % len(options)
         label.text = options[selected['id']]
+        GraphsHelper.render_step_buttons(selected['id'], buttons)
 
-    def create_next_button(label, options, selected):
+    def create_next_button_step(label, options, selected, buttons):
         button_next = Button(label=">", button_type="success", css_classes=["nav_buttons"])
-        button_next.on_click(partial(GraphsHelper.on_next_press, label=label, options=options, selected=selected))
+        button_next.on_click(partial(GraphsHelper.on_next_press_step, label=label, options=options, selected=selected, buttons=buttons))
         return button_next
     
-    def create_previous_button(label, options, selected):
+    def create_previous_button_step(label, options, selected, buttons):
         button_previous = Button(label="<", button_type="success", css_classes=["nav_buttons"])
-        button_previous.on_click(partial(GraphsHelper.on_previous_press, label=label, options=options, selected=selected))
+        button_previous.on_click(partial(GraphsHelper.on_previous_press_step, label=label, options=options, selected=selected, buttons=buttons))
+        return button_previous
+
+    def on_next_press(label, select):
+        logger.error(label)
+        cur_index = select.options.index(select.value)
+        next_index = (cur_index + 1) % len(select.options)
+        label.text = select.options[next_index]
+        select.value = select.options[next_index]
+
+    def on_previous_press(label, select):
+        cur_index = select.options.index(select.value)
+        next_index = (cur_index - 1) % len(select.options)
+        label.text = select.options[next_index]
+        select.value = select.options[next_index]
+
+    def create_next_button(label, select):
+        button_next = Button(label=">", button_type="success", css_classes=["nav_buttons"])
+        button_next.on_click(partial(GraphsHelper.on_next_press, label=label, select=select))
+        return button_next
+    
+    def create_previous_button(label, select):
+        button_previous = Button(label="<", button_type="success", css_classes=["nav_buttons"])
+        button_previous.on_click(partial(GraphsHelper.on_previous_press, label=label, select=select))
         return button_previous
 
     def create_header(time_widget, date_widget, exposure):
@@ -45,4 +109,4 @@ class GraphsHelper:
 
 
 
-        return row(column_exposure, column_date, column_time, sizing_mode='scale_height', css_classes=['top_controls'])
+        return row(column_exposure, column_date, column_time, width=600, css_classes=['top_controls'])

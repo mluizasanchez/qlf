@@ -6,7 +6,6 @@ from bokeh.models import CustomJS, RadioGroup, Div, CheckboxGroup, Button
 from bokeh.layouts import widgetbox, row, column, gridplot, layout, Spacer
 import pandas as pd
 from bokeh.models.widgets import DataTable, TableColumn, HTMLTemplateFormatter
-from bokeh import events
 
 import configparser
 import os
@@ -133,7 +132,7 @@ class MonitorHelper():
 
         for index, event in enumerate(['/start', '/stop', '/restart']):
             attributes = ColumnDataSource(data=dict(event=[event]))
-            controls[index].js_on_event(events.ButtonClick, MonitorHelper.dispatch_event(attributes))
+            controls[index].on_click(MonitorHelper.dispatch_event(attributes))
 
         buttons = column(*controls, css_classes=["btn_group"])
         return row(buttons, sizing_mode='scale_height', css_classes=['top_controls'])

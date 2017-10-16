@@ -5,7 +5,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0,
     maximum-scale=1.0, user-scalable=0">
-    <title>QLF</title>
+    <title>QLF
+        {% if "exposures" in bokeh_app %}
+            - QA
+        {% elif "monitor" in bokeh_app %}
+            - Monitor
+        {% elif "footprint" in bokeh_app %}
+        {% elif "graphs" in bokeh_app %}
+            - QA
+        {% endif %}
+    </title>
     <!-- Bootstrap core CSS -->
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
     <!-- Custom styles for this template -->
@@ -38,7 +47,17 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/"><b>DESI Quick Look</b></a>
+            <a class="navbar-brand" href="/"><b>DESI Quick Look
+                {% if "exposures" in bokeh_app %}
+                     - QA
+                {% elif "monitor" in bokeh_app %}
+                     - Monitor
+                {% elif "footprint" in bokeh_app %}
+                {% elif "graphs" in bokeh_app %}
+                     - QA
+                {% endif %}
+            </b>    
+            </a>
         </div>
         <div class="navbar-collapse collapse" id="navbar">
 

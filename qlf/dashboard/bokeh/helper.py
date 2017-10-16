@@ -27,7 +27,7 @@ def get_data(name, params):
     qa = requests.get(api['qa'], params={'name': name}).json()
     qa = qa['results']
 
-    logger.info('QA: {}'.format(qa))
+    # logger.info('QA: {}'.format(qa))
 
     metrics = {}
 
