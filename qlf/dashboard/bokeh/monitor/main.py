@@ -51,7 +51,6 @@ date_widget = Div(text="")
 exposure = Div(text="")
 status = Div(text="")
 
-curdoc().add_root(row(MonitorHelper.create_controls(),MonitorHelper.create_header(time_widget, date_widget, exposure, status), sizing_mode='scale_height', css_classes=['top_controls']))
 
 # Main console widget
 activate_main_console = CheckboxGroup(labels=['Start Monitoring'], active=[0])
@@ -62,13 +61,14 @@ activate_inject_console = CheckboxGroup(labels=['Scroll End'], active=[0])
 inject_console = MonitorHelper.create_console(activate_inject_console, "inject")
 
 consoles = column(main_console, inject_console, css_classes=["consoles"])
-curdoc().add_root(activate_main_console)
-curdoc().add_root(consoles)
+curdoc().add_root(row(MonitorHelper.create_controls(), MonitorHelper.create_header(time_widget, date_widget, exposure, status), css_classes=['top_controls']))
+curdoc().add_root(column(activate_main_console))
 
 
 # Stages tables
 stages = MonitorHelper.create_stages()
 stage_columns = column(widgetbox(stages[0], stages[1], name="stage_table_r", css_classes=["stages"]),widgetbox(stages[2], stages[3], name="stage_table_b", css_classes=["stages"]),widgetbox(stages[4], stages[5], name="stage_table_z", css_classes=["stages"]), css_classes=["stage_columns"])
+curdoc().add_root(consoles)
 curdoc().add_root(stage_columns)
 
 r = curdoc().session_context._document
