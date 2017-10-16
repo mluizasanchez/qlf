@@ -82,14 +82,16 @@ class MonitorHelper():
         b_band = Div(text=MonitorHelper.create_table(cams_stages_b, False))
         z_band = Div(text=MonitorHelper.create_table(cams_stages_z, False))
 
-        r_label = Div(text="<b class=\"band_label\">R</b>")
-        b_label = Div(text="<b class=\"band_label\">B</b>")
-        z_label = Div(text="<b class=\"band_label\">Z</b>")
+        r_label = Div(text="<b class=\"band_label\">r</b>")
+        b_label = Div(text="<b class=\"band_label\">b</b>")
+        z_label = Div(text="<b class=\"band_label\">z</b>")
 
         return [r_label, r_band, b_label, b_band, z_label, z_band]
 
     def dispatch_event(event):
-        return requests.get('http://localhost:8000'+event).json()
+        QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
+                            'http://localhost:8000')
+        return requests.get(QLF_BASE_URL+event).json()
 
     def create_header(time_widget, date_widget, exposure, status):
         reduct_mode = widgetbox(Div(text="<b>Reduction Mode:</b>"))

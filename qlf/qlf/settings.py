@@ -96,7 +96,7 @@ DATABASES = {
 HOSTNAME = os.environ.get('HOSTNAME', 'localhost')
 
 BOKEH_URL='http://{}:{}'.format(
-    os.environ.get('BOKEH_SERVER', 'localhost'),
+    os.environ.get('BOKEH_SERVER', HOSTNAME),
     os.environ.get('BOKEH_PORT', '5006')
 )
 

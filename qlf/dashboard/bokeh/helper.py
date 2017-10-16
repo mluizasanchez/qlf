@@ -9,6 +9,9 @@ from bokeh.plotting import Figure
 QLF_API_URL = os.environ.get('QLF_API_URL',
                              'http://localhost:8000/dashboard/api')
 
+QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
+                            'http://localhost:8000')
+
 logger = logging.getLogger(__name__)
 
 
@@ -177,8 +180,7 @@ def get_status():
     Returns daemon status
     """
 
-    api = requests.get(QLF_API_URL).json()
-    return requests.get('http://localhost:8000/status').json()
+    return requests.get(QLF_BASE_URL+ '/status').json()
 
 if __name__ == '__main__':
     logger.info('Standalone execution...')
