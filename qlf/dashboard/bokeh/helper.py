@@ -172,6 +172,13 @@ def get_url_args(curdoc, defaults=None):
 
     return args
 
+def get_status():
+    """
+    Returns daemon status
+    """
+
+    api = requests.get(QLF_API_URL).json()
+    return requests.get('http://localhost:8000/status').json()
 
 if __name__ == '__main__':
     logger.info('Standalone execution...')
