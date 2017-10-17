@@ -9,7 +9,7 @@ from bokeh.charts import Donut
 import datetime
 import time
 
-from dashboard.bokeh.helper import get_exposures, get_cameras
+from dashboard.bokeh.helper import get_exposures, get_cameras, get_last_process
 import pandas as pd
 import logging
 
@@ -25,7 +25,14 @@ logger = logging.getLogger(__name__)
 # Header Variables
 time_widget = Div(text="")
 date_widget = Div(text="")
-exposure = Div(text="4")
+exposure = Div(text="")
+
+process = get_last_process()
+
+if process:
+    process = process.pop()
+    exp_id = process.get("exposure")
+    exposure.text = "<p class=\"exposure_label\">" + str(exp_id) + "</p>"
 
 date_widget.text = "<p class=\"date_label\">" + datetime.datetime.now().strftime("%Y-%m-%d") + "</p>"
 time_widget.text = "<p class=\"time_label\">" + datetime.datetime.now().strftime("%H:%M:%S") + "</p>"
@@ -80,14 +87,17 @@ for i in range(4):
     new_button.on_click(partial(handle_button, button=new_button))
     buttons.append(new_button)
 
+
 buttons[0].label = "COUNTPIX"
 buttons[1].label = "GETBIAS"
 buttons[2].label = "GETRMS"
 buttons[3].label = "XWSIGMA"
 
-render_buttons = column(*buttons, css_classes=["metric_box"])
+metric_title = Div(text="<p>Metrics</p>")
 
-select_step = row(GraphsHelper.create_previous_button_step(step_label, step_names, selected_step, buttons), step_label, GraphsHelper.create_next_button_step(step_label, step_names, selected_step, buttons))
+render_buttons = column(metric_title, *buttons, css_classes=["metric_box"])
+
+select_step = row(GraphsHelper.create_previous_button_step(step_label, step_names, selected_step, buttons, curdoc), step_label, GraphsHelper.create_next_button_step(step_label, step_names, selected_step, buttons, curdoc))
 
 spectrograph_title = Div(text="<p class=\"box_label\">Spectrograph</p>")
 

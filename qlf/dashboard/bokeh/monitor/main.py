@@ -67,7 +67,7 @@ curdoc().add_root(column(activate_main_console))
 
 # Stages tables
 stages = MonitorHelper.create_stages()
-stage_columns = column(widgetbox(stages[0], stages[1], name="stage_table_r", css_classes=["stages"]),widgetbox(stages[2], stages[3], name="stage_table_b", css_classes=["stages"]),widgetbox(stages[4], stages[5], name="stage_table_z", css_classes=["stages"]), css_classes=["stage_columns"])
+stage_columns = column(widgetbox(stages[0], stages[1], name="stage_table_b", css_classes=["stages"]),widgetbox(stages[2], stages[3], name="stage_table_r", css_classes=["stages"]),widgetbox(stages[4], stages[5], name="stage_table_z", css_classes=["stages"]), css_classes=["stage_columns"])
 curdoc().add_root(consoles)
 curdoc().add_root(stage_columns)
 
@@ -123,17 +123,15 @@ def update(t):
         PROCESS = process
         exp_id = PROCESS.get("exposure")
         exposure.text = "<p class=\"exposure_label\">" + str(exp_id) + "</p>"
-
     stages = MonitorHelper.create_stages()
-    curdoc().set_select({"name": "stage_table_r"}, {"children": [stages[0], stages[1]]})
-    curdoc().set_select({"name": "stage_table_b"}, {"children": [stages[2], stages[3]]})
+    curdoc().set_select({"name": "stage_table_b"}, {"children": [stages[0], stages[1]]})
+    curdoc().set_select({"name": "stage_table_r"}, {"children": [stages[2], stages[3]]})
     curdoc().set_select({"name": "stage_table_z"}, {"children": [stages[4], stages[5]]})
-    
     for cam in label_name:
         cameralog = None
         log = str()
         try:
-            for item in PROCESS.get("jobs", list()):
+            for item in PROCESS.get("process_jobs", list()):
                 if cam == item.get("camera"):
                     cameralog = os.path.join(desi_spectro_redux, item.get('logname'))
                     break
@@ -144,14 +142,46 @@ def update(t):
         except Exception as e:
             logger.warn(e)
 
-        if "Running Preproc" in ''.join(log):
-            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'processing_stage')
-        if "Checking version SIM" in ''.join(log):
-            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'error_stage')
-        if "Subtracting average overscan" in ''.join(log):
+        if "Pipeline completed. Final result" in ''.join(log):
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'success_stage')
             MonitorHelper.update_stage(cam[:1], 2, int(cam[1:]), 'success_stage')
-        if "Median rdnoise and overscan" in ''.join(log):
             MonitorHelper.update_stage(cam[:1], 3, int(cam[1:]), 'success_stage')
-            
+        elif "Starting to run step SkySub_QL" in ''.join(log):
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 2, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 3, int(cam[1:]), 'processing_stage')
+            next
+
+        elif "Starting to run step ApplyFiberFlat_QL" in ''.join(log):
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 2, int(cam[1:]), 'processing_stage')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'success_stage')
+            next
+
+        elif "Starting to run step BoxcarExtract" in ''.join(log):
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'success_stage')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'processing_stage')
+            next
+
+        elif "Starting to run step Preproc" in ''.join(log):
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'processing_stage')
+            next
+        else:
+            MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'none')
+            MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'none')
+            MonitorHelper.update_stage(cam[:1], 2, int(cam[1:]), 'none')
+            MonitorHelper.update_stage(cam[:1], 3, int(cam[1:]), 'none')
+
+        
+
+
+        # if "Checking version SIM" in ''.join(log):
+        #     MonitorHelper.update_stage(cam[:1], 1, int(cam[1:]), 'error_stage')
+        # if "Median rdnoise and overscan" in ''.join(log):
+        #     MonitorHelper.update_stage(cam[:1], 3, int(cam[1:]), 'success_stage')
+        # if "Starting to run step Preproc" in ''.join(log):
+        #     MonitorHelper.update_stage(cam[:1], 0, int(cam[1:]), 'processing_stage')            
 
 curdoc().add_periodic_callback(update, 1000)

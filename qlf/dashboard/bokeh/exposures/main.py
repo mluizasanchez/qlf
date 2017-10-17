@@ -6,7 +6,7 @@ from bokeh.plotting import curdoc, figure
 from bokeh.charts.utils import df_from_json
 from bokeh.charts import Donut
 
-from dashboard.bokeh.helper import get_exposures, get_cameras
+from dashboard.bokeh.helper import get_exposures, get_cameras, get_last_process
 import pandas as pd
 import logging
 from bokeh.models import CustomJS
@@ -15,54 +15,54 @@ from dashboard.bokeh.utils.graphs_helper import GraphsHelper
 import datetime
 
 # Get the list of exposures
-exposures = get_exposures()
+# exposures = get_exposures()
 
-expid = None
+# expid = None
 
-if exposures['expid']:
-    exposures['expid'] = sorted(exposures['expid'])
+# if exposures['expid']:
+#     exposures['expid'] = sorted(exposures['expid'])
 
-    # By default display the last one on the interface
-    expid = exposures['expid'][-1]
-    flavor = exposures['flavor'][-1]
+#     # By default display the last one on the interface
+#     expid = exposures['expid'][-1]
+#     flavor = exposures['flavor'][-1]
 
-    # Page title reflects the selected exposure
-    title = Div(text="<h3>Exposure ID {} ({})</h3>".format(expid, flavor))
+#     # Page title reflects the selected exposure
+#     title = Div(text="<h3>Exposure ID {} ({})</h3>".format(expid, flavor))
 
-    # Here we configure a 'slider' to change the exposure
-    slider = Slider(start=exposures['expid'][0], end=expid,
-                    value=expid, step=1, title="EXPOSURE ID")
+#     # Here we configure a 'slider' to change the exposure
+#     slider = Slider(start=exposures['expid'][0], end=expid,
+#                     value=expid, step=1, title="EXPOSURE ID")
 
-# Now we configure the camera grid layout
+# # Now we configure the camera grid layout
 
-# We need a 'hover' tool for each camera, these are things
-# displayed when we hover on each camera
+# # We need a 'hover' tool for each camera, these are things
+# # displayed when we hover on each camera
 
-# Should we display scalars for all selected metrics? median values
-# by camera or by each amplifier?
+# # Should we display scalars for all selected metrics? median values
+# # by camera or by each amplifier?
 
-hover = HoverTool(tooltips=[("Camera", "@camera"), ("Status", "@status")])
+# hover = HoverTool(tooltips=[("Camera", "@camera"), ("Status", "@status")])
 
-# We have a fixed layout for the grid plot
-# and we add the hover and the tap tool
+# # We have a fixed layout for the grid plot
+# # and we add the hover and the tap tool
 
-# The tap tool will be used to click or 'tap' on the cameras and
-# open the drill down plots associated to the selected metric
+# # The tap tool will be used to click or 'tap' on the cameras and
+# # open the drill down plots associated to the selected metric
 
-p = figure(x_range=(-1, 10), y_range=(0.5, 3.9), tools=[hover, 'tap'])
-# p.logo = None
-p.toolbar_location = None
+# p = figure(x_range=(-1, 10), y_range=(0.5, 3.9), tools=[hover, 'tap'])
+# # p.logo = None
+# p.toolbar_location = None
 
-# Now we configure the camera column data source, each element of the column datasource
-# represents a camera (30 cameras in total for the 10 spectrographs and 3 arms)
+# # Now we configure the camera column data source, each element of the column datasource
+# # represents a camera (30 cameras in total for the 10 spectrographs and 3 arms)
 
-# The grid layout is the following, one row for each arm [b, r, z] and one column for
-# each spectrograph [0, ...,9]
+# # The grid layout is the following, one row for each arm [b, r, z] and one column for
+# # each spectrograph [0, ...,9]
 
-# Note: bokeh column data source elements must have the same length,
-# thus some redundancy is expected here
+# # Note: bokeh column data source elements must have the same length,
+# # thus some redundancy is expected here
 
-# Mostly empty, this will be filled by the slider_update() and metric_update() functions
+# # Mostly empty, this will be filled by the slider_update() and metric_update() functions
 
 source = ColumnDataSource(data={
     "x": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 3, # positions of each camera
@@ -75,103 +75,103 @@ source = ColumnDataSource(data={
     "camera": [None] * 30
 })
 
-camera_grid = p.square('x', 'y', color='color', size=45, source=source)
+# camera_grid = p.square('x', 'y', color='color', size=45, source=source)
 
-# Configure camera labels
-# TODO: we can improve this
+# # Configure camera labels
+# # TODO: we can improve this
 
-labels = ColumnDataSource(data={"x": [-0.9, -0.9, -0.9, -0.15, 0.85, 1.85, 2.85, 3.85, 4.85, 5.85, 6.85, 7.85, 8.85],
-                                "y": [2.9, 1.9, 0.9] + [3.5]*10,
-                                "text": ['b', 'r', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']})
+# labels = ColumnDataSource(data={"x": [-0.9, -0.9, -0.9, -0.15, 0.85, 1.85, 2.85, 3.85, 4.85, 5.85, 6.85, 7.85, 8.85],
+#                                 "y": [2.9, 1.9, 0.9] + [3.5]*10,
+#                                 "text": ['b', 'r', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']})
 
-label_set = LabelSet(x='x', y='y', text='text', source=labels, render_mode='canvas')
-
-
-# Add labels to the plot layout
-p.add_layout(label_set)
-
-# Update the datasource when the selected exposure changes
-
-def update(expid):
-
-    # look up exposure properties
-    index = exposures['expid'].index(expid)
-    flavor = exposures['flavor'][index]
-
-    title.text = "<h3>Exposure ID {} ({})</h3>".format(expid, flavor)
-
-    # Get cameras registered in the DB for the selected exposure
-
-    cameras = get_cameras()
-
-    # Fill up the datasource with properties of each camera
-
-    for camera in cameras:
-        arm = camera['arm']
-        spectrograph = int(camera['spectrograph'])
-
-        if arm == 'b':
-            source.data['color'][spectrograph+20] = "green"
-            source.data['camera'][spectrograph+20] = camera['camera']
-            source.data['status'][spectrograph+20] = "SNR passed"
-            source.data['spectrograph'][spectrograph+20] = spectrograph
-            source.data['arm'][spectrograph+20] = arm
-
-        if arm == 'r':
-            source.data['color'][spectrograph+10] = "green"
-            source.data['camera'][spectrograph+10] = camera['camera']
-            source.data['status'][spectrograph+10] = "SNR passed"
-            source.data['spectrograph'][spectrograph+10] = spectrograph
-            source.data['arm'][spectrograph+10] = arm
-
-        if arm == 'z':
-            source.data['color'][spectrograph] = "green"
-            source.data['camera'][spectrograph] = camera['camera']
-            source.data['status'][spectrograph] = "SNR passed"
-            source.data['spectrograph'][spectrograph] = spectrograph
-            source.data['arm'][spectrograph] = arm
-
-    source.stream(source.data, 30)
-
-if expid:
-    # Update camera grid with data from the last exposure
-    update(expid)
-
-# Here we configure the tap tool to open the drill down plots for the selected camera and metric
-
-# TODO: for now it is fixed for the SNR metric which will open the SNR vs. Mag plot
-
-url = "/dashboard/qasnr?exposure={}&arm=@arm&spectrograph=@spectrograph".format(expid)
-
-taptool = p.select(type=TapTool)
-taptool.callback = OpenURL(url=url)
-
-# Configure an action if slider changes
-
-def slider_update(attr, old, new):
-    update(new)
-
-slider.on_change('value', slider_update)
-
-# Configure the metric selection
-
-# TODO: this is fixed for now, we displaying the SNR metric only
-
-metrics = ["COUNTS", "BIAS", "RMS", "XWSIGMA",
-           "SKYCOUNTS", "SKYPEAK", "SNR"]
-
-metric_select = CheckboxGroup(labels=metrics, active=[6], inline=False, width=50)
-
-wedge_metric_select = RadioButtonGroup(
-    labels=[ metrics[metric] for metric in metric_select.active], active=0)
+# label_set = LabelSet(x='x', y='y', text='text', source=labels, render_mode='canvas')
 
 
-def wedge_update(attr, old, new):
+# # Add labels to the plot layout
+# p.add_layout(label_set)
 
-    wedge_metric_select.labels = [ metrics[metric] for metric in new ]
+# # Update the datasource when the selected exposure changes
+
+# def update(expid):
+
+#     # look up exposure properties
+#     index = exposures['expid'].index(expid)
+#     flavor = exposures['flavor'][index]
+
+#     title.text = "<h3>Exposure ID {} ({})</h3>".format(expid, flavor)
+
+#     # Get cameras registered in the DB for the selected exposure
+
+#     cameras = get_cameras()
+
+#     # Fill up the datasource with properties of each camera
+
+#     for camera in cameras:
+#         arm = camera['arm']
+#         spectrograph = int(camera['spectrograph'])
+
+#         if arm == 'b':
+#             source.data['color'][spectrograph+20] = "green"
+#             source.data['camera'][spectrograph+20] = camera['camera']
+#             source.data['status'][spectrograph+20] = "SNR passed"
+#             source.data['spectrograph'][spectrograph+20] = spectrograph
+#             source.data['arm'][spectrograph+20] = arm
+
+#         if arm == 'r':
+#             source.data['color'][spectrograph+10] = "green"
+#             source.data['camera'][spectrograph+10] = camera['camera']
+#             source.data['status'][spectrograph+10] = "SNR passed"
+#             source.data['spectrograph'][spectrograph+10] = spectrograph
+#             source.data['arm'][spectrograph+10] = arm
+
+#         if arm == 'z':
+#             source.data['color'][spectrograph] = "green"
+#             source.data['camera'][spectrograph] = camera['camera']
+#             source.data['status'][spectrograph] = "SNR passed"
+#             source.data['spectrograph'][spectrograph] = spectrograph
+#             source.data['arm'][spectrograph] = arm
+
+#     source.stream(source.data, 30)
+
+# if expid:
+#     # Update camera grid with data from the last exposure
+#     update(expid)
+
+# # Here we configure the tap tool to open the drill down plots for the selected camera and metric
+
+# # TODO: for now it is fixed for the SNR metric which will open the SNR vs. Mag plot
+
+# url = "/dashboard/qasnr?exposure={}&arm=@arm&spectrograph=@spectrograph".format(expid)
+
+# taptool = p.select(type=TapTool)
+# taptool.callback = OpenURL(url=url)
+
+# # Configure an action if slider changes
+
+# def slider_update(attr, old, new):
+#     update(new)
+
+# slider.on_change('value', slider_update)
+
+# # Configure the metric selection
+
+# # TODO: this is fixed for now, we displaying the SNR metric only
+
+# metrics = ["COUNTS", "BIAS", "RMS", "XWSIGMA",
+#            "SKYCOUNTS", "SKYPEAK", "SNR"]
+
+# metric_select = CheckboxGroup(labels=metrics, active=[6], inline=False, width=50)
+
+# wedge_metric_select = RadioButtonGroup(
+#     labels=[ metrics[metric] for metric in metric_select.active], active=0)
 
 
-metric_select.on_change('active', wedge_update)
+# def wedge_update(attr, old, new):
+
+#     wedge_metric_select.labels = [ metrics[metric] for metric in new ]
+
+
+# metric_select.on_change('active', wedge_update)
 
 
 # Wedge plots (layout)
@@ -227,6 +227,13 @@ time_widget = Div(text="")
 date_widget = Div(text="")
 exposure = Div(text="")
 
+process = get_last_process()
+
+if process:
+    process = process.pop()
+    exp_id = process.get("exposure")
+    exposure.text = "<p class=\"exposure_label\">" + str(exp_id) + "</p>"
+
 date_widget.text = "<p class=\"date_label\">" + datetime.datetime.now().strftime("%Y-%m-%d") + "</p>"
 time_widget.text = "<p class=\"time_label\">" + datetime.datetime.now().strftime("%H:%M:%S") + "</p>"
 
@@ -234,7 +241,7 @@ header_row = row(GraphsHelper.create_header(time_widget, date_widget, exposure))
 
 wedges_row = row(b_column, r_column, z_column)
 
-step_box = Div(text="<p class=\"metric_box\">Step</p>")
+step_box = Div(text="<div class=\"metric_box\"><p>Step</p><p style=\"padding-top:100px;\">Pre Processing</p><p style=\"padding-top:85px;\">Spectral Extraction</p><p style=\"padding-top:85px;\">Fiber Flattening</p><p style=\"padding-top:100px;\">Sky Subtraction</p></div>")
 
 curdoc().add_root(row(step_box, column(header_row, wedges_row)))
 

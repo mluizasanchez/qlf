@@ -62,7 +62,7 @@ class MonitorHelper():
             cams_stages_b[stage]['camera'][camera] = status
 
     def create_table(cam_stage, header):
-        column_names = ["Pre Processing", "Spectra Extraction", "Fiber Flattening", "Sky Subtraction"]
+        column_names = ["Pre Processing", "Spectral Extraction", "Fiber Flattening", "Sky Subtraction"]
         table_text = "<table>"
         if header:
             table_text += "<tr>"
@@ -73,20 +73,21 @@ class MonitorHelper():
             table_text += "<tr>"
             for stage in range(4):
                 table_text += "<td onclick=\"openDialog(event)\" class=\"" + str(cam_stage[stage]['camera'][camera]) + " camera_stage\"></td>"
+            table_text += "<td><i class=\"fa fa-plus-circle\" aria-hidden=\"true\"></i></td>"
             table_text += "</tr>"
         table_text += "</table>"
         return table_text
 
     def create_stages():
-        r_band = Div(text=MonitorHelper.create_table(cams_stages_r, True))
-        b_band = Div(text=MonitorHelper.create_table(cams_stages_b, False))
+        b_band = Div(text=MonitorHelper.create_table(cams_stages_b, True))
+        r_band = Div(text=MonitorHelper.create_table(cams_stages_r, False))
         z_band = Div(text=MonitorHelper.create_table(cams_stages_z, False))
 
-        r_label = Div(text="<b class=\"band_label\">r</b>")
         b_label = Div(text="<b class=\"band_label\">b</b>")
+        r_label = Div(text="<b class=\"band_label\">r</b>")
         z_label = Div(text="<b class=\"band_label\">z</b>")
 
-        return [r_label, r_band, b_label, b_band, z_label, z_band]
+        return [b_label, b_band, r_label, r_band, z_label, z_band]
 
     def dispatch_event(event):
         QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
