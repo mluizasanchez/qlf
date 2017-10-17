@@ -10,6 +10,9 @@ from bokeh.plotting import Figure
 QLF_API_URL = os.environ.get('QLF_API_URL',
                              'http://localhost:8000/dashboard/api')
 
+QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
+                            'http://localhost:8000')
+
 logger = logging.getLogger(__name__)
 
 
