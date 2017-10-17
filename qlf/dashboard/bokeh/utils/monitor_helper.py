@@ -6,6 +6,8 @@ from bokeh.models import CustomJS, RadioGroup, Div, CheckboxGroup, Button
 from bokeh.layouts import widgetbox, row, column, gridplot, layout, Spacer
 import pandas as pd
 from bokeh.models.widgets import DataTable, TableColumn, HTMLTemplateFormatter
+import requests
+from functools import partial
 
 import configparser
 import os
@@ -80,25 +82,16 @@ class MonitorHelper():
         b_band = Div(text=MonitorHelper.create_table(cams_stages_b, False))
         z_band = Div(text=MonitorHelper.create_table(cams_stages_z, False))
 
-        r_label = Div(text="<b class=\"band_label\">R</b>")
-        b_label = Div(text="<b class=\"band_label\">B</b>")
-        z_label = Div(text="<b class=\"band_label\">Z</b>")
+        r_label = Div(text="<b class=\"band_label\">r</b>")
+        b_label = Div(text="<b class=\"band_label\">b</b>")
+        z_label = Div(text="<b class=\"band_label\">z</b>")
 
         return [r_label, r_band, b_label, b_band, z_label, z_band]
 
-    def dispatch_event(attributes=[]):
-        "Build a suitable CustomJS to display the current event in the div model."
-        return CustomJS(args=dict(attrs=attributes), code="""
-            var xhttp = new XMLHttpRequest();
-            xhttp.open("GET", attrs.data.event[0], true);
-            xhttp.send();
-        """)
-
-    def open_window(attributes=[]):
-        "Build a suitable CustomJS to display the current event in the div model."
-        return CustomJS(args=dict(attrs=attributes), code="""
-            window.open(attrs.data.event[0],'_blank');
-        """)
+    def dispatch_event(event):
+        QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
+                            'http://localhost:8000')
+        return requests.get(QLF_BASE_URL+event).json()
 
     def create_header(time_widget, date_widget, exposure, status):
         reduct_mode = widgetbox(Div(text="<b>Reduction Mode:</b>"))
@@ -131,8 +124,7 @@ class MonitorHelper():
         controls.append(Button(label='RESET', button_type="warning", width=50))
 
         for index, event in enumerate(['/start', '/stop', '/restart']):
-            attributes = ColumnDataSource(data=dict(event=[event]))
-            controls[index].on_click(MonitorHelper.dispatch_event(attributes))
+            controls[index].on_click(partial(MonitorHelper.dispatch_event, event=event))
 
         buttons = column(*controls, css_classes=["btn_group"])
         return row(buttons, sizing_mode='scale_height', css_classes=['top_controls'])
