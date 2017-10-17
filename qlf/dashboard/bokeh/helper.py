@@ -1,3 +1,4 @@
+
 import os
 import logging
 import pandas as pd
@@ -8,9 +9,6 @@ from bokeh.plotting import Figure
 
 QLF_API_URL = os.environ.get('QLF_API_URL',
                              'http://localhost:8000/dashboard/api')
-
-QLF_BASE_URL = os.environ.get('QLF_BASE_URL',
-                            'http://localhost:8000')
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ def get_data(name, params):
     qa = requests.get(api['qa'], params={'name': name}).json()
     qa = qa['results']
 
-    # logger.info('QA: {}'.format(qa))
+    logger.info('QA: {}'.format(qa))
 
     metrics = {}
 
@@ -44,9 +42,10 @@ def get_data(name, params):
     for metric in params:
         if metric not in full_metrics:
             logger.warn('The {} metric is not present in {}'.format(metric, name))
-
-        metrics[metric] = full_metrics.get(metric, [])
-
+        if isinstance(full_metrics.get(metric, []), (list, tuple, dict)):
+            metrics[metric] = full_metrics.get(metric, [])
+        else:
+            metrics[metric] = [full_metrics.get(metric, [])]
     return pd.DataFrame.from_dict(metrics, orient='index').transpose()
 
 
@@ -175,12 +174,15 @@ def get_url_args(curdoc, defaults=None):
 
     return args
 
+
 def get_status():
     """
     Returns daemon status
     """
 
-    return requests.get(QLF_BASE_URL+ '/status').json()
+    api = requests.get(QLF_API_URL).json()
+    return requests.get('http://localhost:8000/status').json()
+
 
 if __name__ == '__main__':
     logger.info('Standalone execution...')
