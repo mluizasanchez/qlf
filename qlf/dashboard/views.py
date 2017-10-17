@@ -287,9 +287,9 @@ def daemon_status(request):
     run_manual = qlf_manual.get_status()
 
     if run_auto:
-        message = "Please stop the automatic execution before executing the manual processing."
+        message = "Please quit automatic mode before reprocessing"
     elif run_manual:
-        message = "There is already a sequence of exposures being processed."
+        message = "Exposures being processed already."
     elif qlf.is_running():
         message = "Wait for processing to complete."
     else:
@@ -306,7 +306,7 @@ def run_manual_mode(request):
     if qlf_auto_status:
         return JsonResponse({
             "success": False,
-            "message": "Please stop the automatic execution before executing the manual processing."
+            "message": "Please quit automatic mode before reprocessing"
         })
 
     exposures = request.GET.getlist('exposures[]')
