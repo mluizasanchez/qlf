@@ -180,7 +180,7 @@ def get_status():
     Returns daemon status
     """
 
-    return requests.get(QLF_BASE_URL+ '/status').json()
+    return requests.get(QLF_BASE_URL+ '/get_status').json()
 
 if __name__ == '__main__':
     logger.info('Standalone execution...')

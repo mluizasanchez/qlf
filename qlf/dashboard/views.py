@@ -262,7 +262,7 @@ def restart(request):
     return HttpResponseRedirect('dashboard/monitor')
 
 @api_view(['GET'])
-def status(request):
+def get_status(request):
     status = qlf.get_status()
     if status:
         status_message = 'Running'
