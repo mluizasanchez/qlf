@@ -8,7 +8,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 class GraphsHelper:
-    def render_step_buttons(id, buttons):
+    def render_step_buttons(id, buttons, curdoc):
+        graphs_box = Div(text="<p class=\"graphs_box\"></p>")
+        curdoc().set_select({"name": "graphs"}, {"children": [row(graphs_box, name="graphs")]})
         buttons[0].label = "COUNTPIX"
         buttons[1].label = "GETBIAS"
         buttons[2].label = "GETRMS"
@@ -47,24 +49,24 @@ class GraphsHelper:
             buttons[3].label = None
         return buttons
 
-    def on_next_press_step(label, options, selected, buttons):
+    def on_next_press_step(label, options, selected, buttons, curdoc):
         selected['id'] = (selected['id'] + 1) % len(options)
         label.text = options[selected['id']]
-        GraphsHelper.render_step_buttons(selected['id'], buttons)
+        GraphsHelper.render_step_buttons(selected['id'], buttons, curdoc)
 
-    def on_previous_press_step(label, options, selected, buttons):
+    def on_previous_press_step(label, options, selected, buttons, curdoc):
         selected['id'] = (selected['id'] - 1) % len(options)
         label.text = options[selected['id']]
-        GraphsHelper.render_step_buttons(selected['id'], buttons)
+        GraphsHelper.render_step_buttons(selected['id'], buttons, curdoc)
 
-    def create_next_button_step(label, options, selected, buttons):
+    def create_next_button_step(label, options, selected, buttons, curdoc):
         button_next = Button(label=">", button_type="success", css_classes=["nav_buttons"])
-        button_next.on_click(partial(GraphsHelper.on_next_press_step, label=label, options=options, selected=selected, buttons=buttons))
+        button_next.on_click(partial(GraphsHelper.on_next_press_step, label=label, options=options, selected=selected, buttons=buttons, curdoc=curdoc))
         return button_next
     
-    def create_previous_button_step(label, options, selected, buttons):
+    def create_previous_button_step(label, options, selected, buttons, curdoc):
         button_previous = Button(label="<", button_type="success", css_classes=["nav_buttons"])
-        button_previous.on_click(partial(GraphsHelper.on_previous_press_step, label=label, options=options, selected=selected, buttons=buttons))
+        button_previous.on_click(partial(GraphsHelper.on_previous_press_step, label=label, options=options, selected=selected, buttons=buttons, curdoc=curdoc))
         return button_previous
 
     def on_next_press(label, select):
