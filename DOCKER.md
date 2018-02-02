@@ -6,8 +6,8 @@
 
     git clone https://github.com/desihub/qlf.git
     cd qlf
-		git submodule init
-		git submodule update
+    git submodule init
+    git submodule update
 
 ### Running locally with docker
 
