@@ -20,8 +20,11 @@ log.addHandler(sh)
 class ExposureGenerator(object):
 
     def __init__(self):
-        self.min_interval = 10
-        self.max_interval = 15
+        #self.min_interval = 10
+        #self.max_interval = 15
+
+        self.min_interval = 2
+        self.max_interval = 5
 
         self.spectro_path = None
         self.fiberflat_path = None
@@ -35,7 +38,7 @@ class ExposureGenerator(object):
 
     def __getConfigs(self):
         qlf_root = os.getenv("QLF_ROOT")
-        qlf_conf = os.path.join(qlf_root, "qlf/config/qlf.cfg")
+        qlf_conf = os.path.join(qlf_root, "framework/config/qlf.cfg")
 
         cfg = configparser.ConfigParser()
 
@@ -139,6 +142,7 @@ class ExposureGenerator(object):
             os.makedirs(path)
 
     def __updateFITSFileMetadata(self, exp_file, exp_id, gen_time):
+        print(exp_file)
         hdulist = astropy.io.fits.open(exp_file, mode="update")
         for hduid in range(0, len(hdulist)):
             if "EXPID" in hdulist[hduid].header:
@@ -179,12 +183,12 @@ class ExposureGenerator(object):
         regex = re.compile("^(fiberflat-\w+-)(\d{8})(.fits)$")
 
         for filename in os.listdir(src):
-            src_file = os.path.join(src, filename)
-            new_filename = regex.sub("\g<1>" + exp_id + "\g<3>", filename)
-            dest_file = os.path.join(dest, new_filename)
-            shutil.copy(src_file, dest_file)
-
-            self.__updateFITSFileMetadata(dest_file, exp_id, gen_time)
+            if filename.endswith(".fits"):
+                src_file = os.path.join(src, filename)
+                new_filename = regex.sub("\g<1>" + exp_id + "\g<3>", filename)
+                dest_file = os.path.join(dest, new_filename)
+                shutil.copy(src_file, dest_file)
+                self.__updateFITSFileMetadata(dest_file, exp_id, gen_time)
 
     def __genPsfbootFolder(self, exp_id, gen_time):
         # it is fine to just copy the path
@@ -196,8 +200,9 @@ class ExposureGenerator(object):
             shutil.copytree(src, dest)
 
             for filename in os.listdir(dest):
-                dest_file = os.path.join(dest, filename)
-                self.__updateFITSFileMetadata(dest_file, exp_id, gen_time)
+                if filename.endswith(".fits"):
+                    dest_file = os.path.join(dest, filename)
+                    self.__updateFITSFileMetadata(dest_file, exp_id, gen_time)
 
     def printVars(self):
         log.info("min_interval:      %s" % self.min_interval)
@@ -225,6 +230,6 @@ if __name__ == "__main__":
         )
         rand = random.randint(eg.min_interval, eg.max_interval)
         print("Next generation in %s minutes..." % rand)
-        time.sleep(rand * 60)
+        time.sleep(rand*60)
 
     # TODO add a function to cleanup generated files

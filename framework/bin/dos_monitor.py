@@ -120,14 +120,14 @@ class DOSmonitor(object):
             logger.error("error to load fits file: %s" % error)
             return {}
 
-        dateobs = "%s-%s-%s 22:00" % (night[:-4], night[-4:][:2], night[-2:])
+        # dateobs = "%s-%s-%s 22:00" % (night[:-4], night[-4:][:2], night[-2:])
 
         return {
             'telra': hdr.get('telra', None),
             'teldec': hdr.get('teldec', None),
             'tile': hdr.get('tileid', None),
-            #'dateobs': hdr.get('date-obs', None),
-            'dateobs': dateobs,
+            'dateobs': hdr.get('date-obs', None),
+            # 'dateobs': dateobs,
             'flavor': hdr.get('flavor', None),
             'exptime': hdr.get('exptime', None)
         }
