@@ -27,6 +27,8 @@ INSTALLED_APPS = (
     'debug_toolbar',
     'channels',
     'ui_channel',
+    'django_postgrespool',
+    'corsheaders',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -39,7 +41,11 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
 )
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
 
 INTERNAL_IPS = '127.0.0.1'
 ROOT_URLCONF = 'dashboard.urls'
@@ -92,13 +98,19 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        #'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django_postgrespool',
         'NAME': os.environ.get('POSTGRES_DB', 'dbqlf'),
         'USER': os.environ.get('POSTGRES_USER', 'userqlf'),
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'qlfuser'),
         'HOST': os.environ.get('DB_NAME', 'db'),
         'PORT': '',
     }
+}
+
+DATABASE_POOL_ARGS = {
+    'max_overflow': 30,
+    'pool_size': 10
 }
 
 BOKEH_URL='http://{}:{}'.format(
@@ -133,3 +145,7 @@ if os.environ.get('QLF_REDIS', False):
 X_FRAME_OPTIONS = 'ALLOWALL'
 
 XS_SHARING_ALLOWED_METHODS = ['POST','GET','OPTIONS', 'PUT', 'DELETE']
+
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', None)
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', 25)
