@@ -193,6 +193,32 @@ def write_info(qa_name, params):
             nlines +=1
     return info, nlines
 
+def write_description(qa_name):
+    """Descriptions to be displayed in QA plots."""
+    info_dic={"getbias":
+          ["Bias From Overscan",  "Used to calculate mean and median of region of 2D image, including overscan"],
+            "getrms":["Get RMS","Used to calculate RMS of region of 2D image, including overscan."],
+        "countpix": ["Count Pixels","Count number of pixels above three configured thresholds."
+          +"Quantities should be independent of exposure length."],
+        "xwsigma":["XWSigma","Calculate PSF sigma in spatial and wavelength directions independently using "
+          +"configured sky lines."],
+        "countbins":["Count Spectral Bins","Count the number of wavelength bins above three configured thresholds."],
+        "skycont":["Sky Continuum"," Measurement of sky continuum in configured inter-line sky regions on sky fibers."
+          #+"There are at least two such regions configured per half-fiber (i.e. In the region covered by each of the " 
+          #+"2 amps covering the fiber)."
+                  ],
+        "skypeak":["Sky Peaks","Measurement of counts in windows around configured peak sky wavelengths on all fibers "
+          +"aside from standard star fibers."
+                   #  There are at least two such peaks configured per half-fiber" 
+          #+"(i.e. In the region covered by each of the 2 amps covering the fiber)."
+                  ],
+        "skyresid":["Sky Residual","Number of wavelength bins above three configured thresholds."],
+        "integ":["Integrate Spectrum","Number of wavelength bins above three configured thresholds."],
+        "snr":["Calculate SNR",  "Signal-to-noise ratio measurements for individual targets."]}
+    
+    text="""<body><p  style="text-align:left; color:#262626; font-size:20px;">
+            <b>{}</b> <br>{}</body>""".format(info_dic[qa_name][0],info_dic[qa_name][1])                  
+    return text
 
 
 
