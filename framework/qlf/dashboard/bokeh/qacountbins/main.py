@@ -15,7 +15,7 @@ from bokeh.palettes import (RdYlBu, Colorblind, Viridis256)
 from bokeh.io import output_notebook
 import numpy as np
 
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description
 
 import numpy as np
 import logging
@@ -89,10 +89,22 @@ def bins_doane(data):
         return int(round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b))))
     except:
         return int(round(np.log2(ndata) + 1 ))
-    
-bins_hi = bins_doane(countbins[name_hi])
-bins_med = bins_doane(countbins[name_med])
-bins_low = bins_doane(countbins[name_low])# formely: 17
+
+
+try:    
+    bins_hi = bins_doane(countbins[name_hi])
+except:
+    bins_hi =15
+try:
+    bins_med = bins_doane(countbins[name_med])
+except:
+    bins_med=17
+try:
+    bins_low = bins_doane(countbins[name_low])# formely: 17
+except:
+    bins_low=17
+
+
 hover = HoverTool(tooltips=hist_tooltip)
 hover2 = HoverTool(tooltips=hist_tooltip)
 hover3 = HoverTool(tooltips=hist_tooltip)
@@ -219,7 +231,11 @@ div=Div(text=html_str,
 
 # plow.legend.location = "top_left"
 # layout = gridplot( [phi,pmed,plow,None], ncols=2, plot_width=600, plot_height=600)
-layout = gridplot( [phi,pmed,plow,div], ncols=2, responsive=True, plot_width=600, plot_height=600)
+
+layout_plot = gridplot( [phi,pmed,plow,div], ncols=2, responsive=True, plot_width=600, plot_height=600)
+info_col=column(Div(text=write_description('countbins'), width=1200))
+layout = column([info_col, layout_plot])
+
 
 # End of Bokeh Block
 curdoc().add_root(layout)
