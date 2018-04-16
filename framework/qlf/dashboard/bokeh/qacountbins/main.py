@@ -55,7 +55,7 @@ metrics, tests  = lm.metrics, lm.tests
 
 countbins = metrics['countbins']
 
-print('\n\n\n\n',tests.keys())
+
 
 # ============================================
 # THIS: Given the set up in the block above, 
@@ -86,8 +86,10 @@ def bins_doane(data):
     b = sum([ (x - mean)**3 for x in data])
     b = b/sum([ (x - mean)**2 for x in data])**(1.5)
     try:
+        loger.info("\n\n****",round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b)))  )
         return int(round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b))))
     except:
+        loger.info(  "\n\n\n Failed Doane's rule:{}".format(np.log2(ndata)) )
         return int(round(np.log2(ndata) + 1 ))
 
 
@@ -104,6 +106,7 @@ try:
 except:
     bins_low=17
 
+logger.info("\n\n\n{} \n{} \n{}".format(bins_hi, bins_med, bins_low))
 
 hover = HoverTool(tooltips=hist_tooltip)
 hover2 = HoverTool(tooltips=hist_tooltip)
@@ -225,16 +228,16 @@ for i in range(5):
     html_str=html_str.replace('%s%s'%("param",str(i)), str(tests['countbins'][txt_keys[i]]) )
 
 div=Div(text=html_str, 
-        width=500, height=200)
+        width=400, height=200)
 # ---------
 
 
 # plow.legend.location = "top_left"
 # layout = gridplot( [phi,pmed,plow,None], ncols=2, plot_width=600, plot_height=600)
 
-layout_plot = gridplot( [phi,pmed,plow,div], ncols=2, responsive=True, plot_width=600, plot_height=600)
-info_col=Div(text=write_description('countbins'), width=800)
-layout = column([info_col, layout_plot])
+layout_plot = gridplot( [plow,pmed,phi,div], ncols=2, responsive=False, plot_width=600, plot_height=600)
+info_col=Div(text=write_description('countbins'), width=1200)
+layout = column(widgetbox(info_col), layout_plot)
 
 
 # End of Bokeh Block
