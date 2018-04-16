@@ -6,9 +6,9 @@ from bokeh.models import ColumnDataSource, HoverTool, TapTool, OpenURL
 from bokeh.models.widgets import Select, Slider
 from bokeh.layouts import row, column, widgetbox, gridplot
 
-from bokeh.models.widgets import PreText
+from bokeh.models.widgets import PreText, Div
 from bokeh.models import PrintfTickFormatter
-from dashboard.bokeh.helper import write_info
+from dashboard.bokeh.helper import  write_description, write_info
 
 
 from dashboard.bokeh.helper import get_data, get_exposure_ids, \
@@ -308,7 +308,7 @@ taptool.callback = OpenURL(url=url)
 
 update(selected_arm, selected_spectrograph, selected_exposure)
 
-plot = gridplot([[elg_plot, lrg_plot], [qso_plot, star_plot]], responsive=True)
+plot = gridplot([[elg_plot, lrg_plot], [qso_plot, star_plot]], responsive=False)
 
 # and create the final layout
 # layout = column(widgetbox(exp_slider, responsive=True),
@@ -323,8 +323,8 @@ key_name = 'snr'
 info, nlines = write_info(key_name, tests[key_name])
 txt = PreText(text=info, height=nlines*20)
 #p2txt = column(widgetbox(txt),p2)
-
-layout = column(plot, responsive=True)
+info_col=Div(text=write_description('snr'), width=2*star_plot.plot_width)
+layout = column( widgetbox(info_col), plot)
 
 curdoc().add_root(layout)
 curdoc().title = "SNR"

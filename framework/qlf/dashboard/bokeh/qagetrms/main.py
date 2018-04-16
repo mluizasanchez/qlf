@@ -6,7 +6,7 @@ from bokeh.layouts import row, column, widgetbox, gridplot
 from bokeh.io import curdoc
 from bokeh.io import output_notebook, show, output_file
 
-from bokeh.models.widgets import PreText
+from bokeh.models.widgets import PreText, Div
 from bokeh.models import HoverTool, ColumnDataSource, PrintfTickFormatter
 from bokeh.models import (LinearColorMapper ,    ColorBar)
 
@@ -16,7 +16,7 @@ from bokeh.palettes import (RdYlBu, Colorblind, Viridis256)
 from bokeh.io import output_notebook
 import numpy as np
 
-from dashboard.bokeh.helper import get_url_args, write_info
+from dashboard.bokeh.helper import get_url_args, write_description, write_info
 
 import numpy as np
 import logging
@@ -139,8 +139,13 @@ p.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
 
 #infos
 info, nlines = write_info('getrms', tests['getrms'])
-txt = PreText(text=info, height=nlines*20, width=p.plot_width)
-ptxt = column(widgetbox(txt),p)
+info= """<div> 
+<body><p  style="text-align:left; color:#262626; font-size:20px;">
+            <b>Get RMS</b> <br>Used to calculate RMS of region of 2D image, including overscan.</body></div>"""
+nlines=2
+txt = Div(text=info, width=p.plot_width)
+info_col=Div(text=write_description('getrms'), width=p.plot_width)
+ptxt = column(widgetbox(info_col),p)
 
 
 

@@ -9,9 +9,9 @@ from bokeh.io import output_notebook, show, output_file
 from bokeh.models import ColumnDataSource, HoverTool, Range1d, OpenURL
 from bokeh.models import LinearColorMapper , ColorBar
 from bokeh.models.widgets import Select, Slider
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description
 from bokeh.models import TapTool, OpenURL
-from bokeh.models.widgets import Select
+from bokeh.models.widgets import PreText, Div
 
 import numpy as np
 import logging
@@ -240,7 +240,9 @@ wcolor_bar = ColorBar(color_mapper= wmapper, label_standoff=-13,
 
 pw.add_layout(wcolor_bar, 'left')
 
-layout= row([px,pw], responsive=True)#, sizing_mode='scale_width')
+info_col=Div(text=write_description('xwsigma'), width=2*pw.plot_width)
+layoutplot= row([px,pw], responsive=False)#, sizing_mode='scale_width')
+layout = column(widgetbox(info_col),layoutplot)
 
 curdoc().add_root(layout)
 curdoc().title = "XWSIGMA"

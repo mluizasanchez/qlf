@@ -6,7 +6,7 @@ from bokeh.layouts import row, column, widgetbox, gridplot
 from bokeh.io import curdoc
 from bokeh.io import output_notebook, show, output_file
 
-from bokeh.models.widgets import PreText
+from bokeh.models.widgets import PreText, Div
 from bokeh.models import PrintfTickFormatter
 
 from dashboard.bokeh.helper import write_info
@@ -23,7 +23,7 @@ from bokeh.palettes import (RdYlBu, Colorblind, Viridis256)
 from bokeh.io import output_notebook
 import numpy as np
 
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description
 
 
 import logging
@@ -178,7 +178,9 @@ txt = PreText(text=info, height=nlines*20, width=p2.plot_width)
 p2txt = column(widgetbox(txt),p2)
 
 
-layout = gridplot([[p2txt]], responsive=False)
+#layout = gridplot([[p2txt]], responsive=False)
+info_col=Div(text=write_description('integ'), width=p2.plot_width)
+layout = column(info_col, p2)
 
 # End of Bokeh Block
 curdoc().add_root(layout)

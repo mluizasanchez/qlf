@@ -198,8 +198,8 @@ def write_description(qa_name):
     info_dic={"getbias":
           ["Bias From Overscan",  "Used to calculate mean and median of region of 2D image, including overscan"],
             "getrms":["Get RMS","Used to calculate RMS of region of 2D image, including overscan."],
-        "countpix": ["Count Pixels","Count number of pixels above three configured thresholds."
-          +"Quantities should be independent of exposure length."],
+        "countpix": ["Count Pixels","Count number of pixels above three configured thresholds."],
+          #+"Quantities should be independent of exposure length."],
         "xwsigma":["XWSigma","Calculate PSF sigma in spatial and wavelength directions independently using "
           +"configured sky lines."],
         "countbins":["Count Spectral Bins","Count the number of wavelength bins above three configured thresholds."],
@@ -213,7 +213,8 @@ def write_description(qa_name):
           #+"(i.e. In the region covered by each of the 2 amps covering the fiber)."
                   ],
         "skyresid":["Sky Residual","Number of wavelength bins above three configured thresholds."],
-        "integ":["Integrate Spectrum","Number of wavelength bins above three configured thresholds."],
+        "integ":["Integrate Spectrum","Sum of counts over all bins for each fiber"],
+          #Number of wavelength bins above three configured thresholds."],
         "snr":["Calculate SNR",  "Signal-to-noise ratio measurements for individual targets."]}
     
     text="""<body><p  style="text-align:left; color:#262626; font-size:20px;">

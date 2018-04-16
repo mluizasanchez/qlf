@@ -3,7 +3,7 @@ import sys
 from bokeh.plotting import figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
-from bokeh.models.widgets import PreText
+from bokeh.models.widgets import PreText, Div
 from bokeh.models import PrintfTickFormatter
 from dashboard.bokeh.helper import write_info
 
@@ -14,7 +14,7 @@ from bokeh.io import output_notebook, show, output_file
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, Range1d, OpenURL
 from bokeh.models import LinearColorMapper , ColorBar
 from bokeh.models.widgets import Select, Slider
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description
 
 import numpy as np
 import logging
@@ -118,8 +118,10 @@ p2.line('wl', 'wavg_resid', source=skyres_source)
 p1.x_range = p2.x_range
 
 info, nlines = write_info('skyresid', tests['skyresid'])
+
 txt = PreText(text=info, height=nlines*20, width=p2.plot_width)
-p2txt = column(widgetbox(txt), p1, p2)
+info_col=Div(text=write_description('skyresid'), width=p2.plot_width)
+p2txt = column(widgetbox(info_col), p1, p2)
 
 #layout=column(p1,p2)
 curdoc().add_root(p2txt)

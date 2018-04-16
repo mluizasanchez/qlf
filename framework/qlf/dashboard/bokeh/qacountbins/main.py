@@ -212,7 +212,7 @@ html_str="""
         <td> param3</td>
     </tr>
     <tr>
-        <td> WARNING RANGE</td>
+        <td> WARNING RANGE </td>
         <td> param4</td>
     </tr>
 
@@ -233,7 +233,7 @@ div=Div(text=html_str,
 # layout = gridplot( [phi,pmed,plow,None], ncols=2, plot_width=600, plot_height=600)
 
 layout_plot = gridplot( [phi,pmed,plow,div], ncols=2, responsive=True, plot_width=600, plot_height=600)
-info_col=column(Div(text=write_description('countbins'), width=1200))
+info_col=Div(text=write_description('countbins'), width=800)
 layout = column([info_col, layout_plot])
 
 
