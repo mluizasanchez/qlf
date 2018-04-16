@@ -196,14 +196,14 @@ def write_info(qa_name, params):
 def write_description(qa_name):
     """Descriptions to be displayed in QA plots."""
     info_dic={"getbias":
-          ["Bias From Overscan", "mean of values in overscan covered by each amp" ],#"Used to calculate mean and median of region of 2D image, including overscan"],
-            "getrms":["Get RMS", "rms of full region covered by each amp"],#"Used to calculate RMS of region of 2D image, including overscan."],
-        "countpix": ["Count Pixels", "Number pixels above 'CUTHI' threshold per amplifier" ],#"Count number of pixels above three configured thresholds."],
+          ["Bias From Overscan", "Mean of values in overscan covered by each amplifier." ],#"Used to calculate mean and median of region of 2D image, including overscan"],
+            "getrms":["Get RMS", "RMS of full region covered by each amplifier."],#"Used to calculate RMS of region of 2D image, including overscan."],
+        "countpix": ["Count Pixels", "Number pixels above 'CUTHI' threshold per amplifier." ],#"Count number of pixels above three configured thresholds."],
           #+"Quantities should be independent of exposure length."],
         "xwsigma":["XWSigma","Calculate PSF sigma in spatial and wavelength directions independently using "
           +"configured sky lines."],
         "countbins":["Count Spectral Bins","Count the number of wavelength bins above three configured thresholds."],
-        "skycont":["Sky Continuum"," Measurement of sky continuum in configured inter-line sky regions on sky fibers."
+        "skycont":["Sky Continuum","Measurement of sky continuum in configured inter-line sky regions on sky fibers."
           #+"There are at least two such regions configured per half-fiber (i.e. In the region covered by each of the " 
           #+"2 amps covering the fiber)."
                   ],
@@ -212,7 +212,7 @@ def write_description(qa_name):
                    #  There are at least two such peaks configured per half-fiber" 
           #+"(i.e. In the region covered by each of the 2 amps covering the fiber)."
                   ],
-        "skyresid":["Sky Residual","Number of wavelength bins above three configured thresholds."],
+        "skyresid":["Sky Residual", "Median of residuals in each wavelength bin" ],#"Number of wavelength bins above three configured thresholds."],
         "integ":["Integrate Spectrum","Sum of counts for stars fibers"],
           #Number of wavelength bins above three configured thresholds."],
         "snr":["Calculate SNR",  "Signal-to-noise ratio measurements for individual targets."]}

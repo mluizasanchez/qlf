@@ -144,7 +144,7 @@ p.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
 #infos
 info, nlines = write_info('countpix', tests['countpix'])
 txt = PreText(text=info, height=nlines*20, width=p.plot_width)
-info_col=Div(text=write_description('countpix'), width=p.plot_width)
+info_col=Div(text=write_description('countpix'), width= 2*p.plot_width)
 ptxt = column(widgetbox(info_col),p)
 
 
