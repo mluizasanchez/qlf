@@ -189,7 +189,7 @@ html_str="""
     tr:{text-align:center;}
 </style>
 
-<div  style="text-align:center;">
+<div  style="text-align:center;padding-left:20px;padding-top:10px;">
 <table>
   <tr>
     <th>Parameter</th>
