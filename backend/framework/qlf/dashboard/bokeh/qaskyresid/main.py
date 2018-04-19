@@ -97,13 +97,8 @@ p1 = Figure(title= 'MED_RESID_WAVE',
 
 p1.line('wl', 'med_resid', source=skyres_source)
 
-<<<<<<< HEAD:framework/qlf/dashboard/bokeh/qaskyresid/main.py
-p2 = figure(title= 'WAVG_RESID_WAVE', 
-            x_axis_label='Angstrom', y_axis_label="Units",
-=======
 p2 = Figure(title= 'WAVG_RESID_WAVE', 
             x_axis_label='Angstrom',
->>>>>>> master:backend/framework/qlf/dashboard/bokeh/qaskyresid/main.py
             plot_width = 720, plot_height = 240,
           tools=[wavg_hover,"pan,box_zoom,reset,crosshair, lasso_select" ])
 
@@ -121,7 +116,6 @@ p2.line('wl', 'wavg_resid', source=skyres_source)
 
 
 p1.x_range = p2.x_range
-<<<<<<< HEAD:framework/qlf/dashboard/bokeh/qaskyresid/main.py
 
 info, nlines = write_info('skyresid', tests['skyresid'])
 
@@ -132,7 +126,3 @@ p2txt = column(widgetbox(info_col), p1, p2)
 #layout=column(p1,p2)
 curdoc().add_root(p2txt)
 curdoc().title = "SKYRESID"
-=======
-layout=column(p1,p2)
-curdoc().add_root(layout)
->>>>>>> master:backend/framework/qlf/dashboard/bokeh/qaskyresid/main.py
