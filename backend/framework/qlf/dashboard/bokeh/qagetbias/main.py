@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -96,7 +96,7 @@ hover = HoverTool(tooltips=cmap_tooltip)
 #[         ("counts", "@z"),
 #         ("AMP", "@amp"),         ])
 
-p = figure(title=name, tools=[hover],
+p = Figure(title=name, tools=[hover],
            x_range= list([-0.5,1.5]),           # length = 18
            y_range= list([-0.5,1.5]), #numeros romanos
            plot_width=400, plot_height=400

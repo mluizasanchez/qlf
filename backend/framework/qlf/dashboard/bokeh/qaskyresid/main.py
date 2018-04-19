@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -85,14 +85,14 @@ skyres_source = ColumnDataSource(
                       'wavg_resid':  skyresid['WAVG_RES_WAVE']
                      })
 
-p1 = figure(title= 'MED_RESID_WAVE', 
+p1 = Figure(title= 'MED_RESID_WAVE', 
             x_axis_label='Angstrom',
             plot_width = 720, plot_height = 240,
           tools=[skr_hover,"pan,box_zoom,reset,crosshair, lasso_select" ])
 
 p1.line('wl', 'med_resid', source=skyres_source)
 
-p2 = figure(title= 'WAVG_RESID_WAVE', 
+p2 = Figure(title= 'WAVG_RESID_WAVE', 
             x_axis_label='Angstrom',
             plot_width = 720, plot_height = 240,
           tools=[wavg_hover,"pan,box_zoom,reset,crosshair, lasso_select" ])

@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -117,7 +117,7 @@ mapper = LinearColorMapper(palette= my_palette,
 
 # ======
 # XSIGMA
-p = figure( title = 'SKYPEAK', x_axis_label='RA', y_axis_label='DEC'
+p = Figure( title = 'SKYPEAK', x_axis_label='RA', y_axis_label='DEC'
            , plot_width=750, plot_height=700
            ## , x_range=Range1d(left, right), y_range=Range1d(bottom, top)
            , tools= [peak_hover, "pan,box_zoom,reset,crosshair"])
