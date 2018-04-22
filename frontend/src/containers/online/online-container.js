@@ -25,13 +25,16 @@ class OnlineContainer extends Component {
     time: PropTypes.string.isRequired,
     navigateToMetrics: PropTypes.func.isRequired,
     daemonStatus: PropTypes.string.isRequired,
-    mainTerminal: PropTypes.array.isRequired,
     ingestionTerminal: PropTypes.array.isRequired,
     cameraTerminal: PropTypes.array.isRequired,
     camerasStages: PropTypes.object.isRequired,
     navigateToQA: PropTypes.func.isRequired,
     pathname: PropTypes.string,
     navigateToProcessingHistory: PropTypes.func.isRequired,
+    processId: PropTypes.number,
+    arm: PropTypes.number.isRequired,
+    step: PropTypes.number.isRequired,
+    spectrograph: PropTypes.number.isRequired,
   };
 
   state = {
@@ -81,13 +84,16 @@ class OnlineContainer extends Component {
               socketRef={this.state.socket}
               exposure={this.props.exposure}
               mjd={this.props.mjd}
-              date={this.props.mjd}
+              date={this.props.date}
               time={this.props.time}
               daemonStatus={this.props.daemonStatus}
-              mainTerminal={this.props.mainTerminal}
               ingestionTerminal={this.props.ingestionTerminal}
               cameraTerminal={this.props.cameraTerminal}
               camerasStages={this.props.camerasStages}
+              processId={this.props.processId}
+              arms={arms}
+              spectrographs={spectrographs}
+              qaTests={this.props.qaTests}
             />
           )}
         />
@@ -102,10 +108,11 @@ class OnlineContainer extends Component {
               mjd={this.props.mjd}
               date={this.props.date}
               time={this.props.time}
-              navigateToMetrics={this.props.navigateToMetrics}
               navigateToProcessingHistory={
                 this.props.navigateToProcessingHistory
               }
+              navigateToMetrics={this.props.navigateToMetrics}
+              petalSizeFactor={16}
             />
           )}
         />
@@ -122,6 +129,12 @@ class OnlineContainer extends Component {
               time={this.props.time}
               navigateToMetrics={this.props.navigateToMetrics}
               navigateToQA={this.props.navigateToQA}
+              navigateToProcessingHistory={
+                this.props.navigateToProcessingHistory
+              }
+              arm={this.props.arm}
+              step={this.props.step}
+              spectrograph={this.props.spectrograph}
             />
           )}
         />
@@ -140,11 +153,14 @@ export default connect(
     date: state.qlfOnline.date,
     time: state.qlfOnline.time,
     daemonStatus: state.qlfOnline.daemonStatus,
-    mainTerminal: state.qlfOnline.mainTerminal,
     ingestionTerminal: state.qlfOnline.ingestionTerminal,
     cameraTerminal: state.qlfOnline.cameraTerminal,
     camerasStages: state.qlfOnline.camerasStages,
     pathname: state.router.location ? state.router.location.pathname : null,
+    processId: state.qlfOnline.processId,
+    arm: state.qlfOnline.arm,
+    step: state.qlfOnline.step,
+    spectrograph: state.qlfOnline.spectrograph,
   }),
   dispatch => ({
     navigateToMetrics: (step, spectrograph, arm, exp) =>

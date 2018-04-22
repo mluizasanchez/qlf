@@ -155,3 +155,4 @@ ptxt = column(widgetbox(info_col),p)
 # End of Bokeh Block
 curdoc().add_root(ptxt)
 curdoc().title="GETBIAS"
+

@@ -242,4 +242,6 @@ layout = column(widgetbox(info_col), layout_plot)
 
 # End of Bokeh Block
 curdoc().add_root(layout)
+
 curdoc().title = "COUNTBINS"
+

@@ -5,7 +5,6 @@ function defaultState() {
   return {
     daemonStatus: 'idle',
     exposure: 'none',
-    mainTerminal: [],
     ingestionTerminal: [],
     cameraTerminal: [],
     camerasStages: { b: [], r: [], z: [] },
@@ -15,6 +14,10 @@ function defaultState() {
     mjd: '',
     date: '',
     time: '',
+    processId: undefined,
+    arm: 0,
+    spectrograph: 0,
+    step: 0,
   };
 }
 
@@ -30,8 +33,14 @@ export function updateQA(state) {
   return { type: 'UPDATE_QA', state };
 }
 
-export function navigateToOnlineMetrics() {
+function selectMetric(step, spectrograph, arm) {
+  const state = { step, spectrograph, arm };
+  return { type: 'UPDATE_METRIC_SELECT_ONLINE', state };
+}
+
+export function navigateToOnlineMetrics(step, spectrograph, arm) {
   return function(dispatch) {
+    dispatch(selectMetric(step, spectrograph, arm));
     dispatch(push('/metrics-realtime'));
   };
 }
@@ -62,10 +71,16 @@ function getUnique(availableCameras, index) {
 
 export function qlfOnlineReducers(state = defaultState(), action) {
   switch (action.type) {
+    case 'UPDATE_METRIC_SELECT_ONLINE':
+      return Object.assign({}, state, {
+        step: action.state.step,
+        spectrograph: action.state.spectrograph,
+        arm: action.state.arm,
+      });
     case 'UPDATE_MONITOR_STATE':
       return Object.assign({}, state, {
         daemonStatus: action.state.daemonStatus,
-        mainTerminal: action.state.mainTerminal,
+        processId: action.state.processId,
         ingestionTerminal: action.state.ingestionTerminal,
         exposure: action.state.exposure,
         camerasStages: action.state.camerasStages,
