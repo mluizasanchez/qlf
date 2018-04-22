@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -121,7 +121,7 @@ source_low = ColumnDataSource(data={
 
 
 
-phi = figure(title='NBINSHI',tools=[hover,"pan,wheel_zoom,box_zoom,reset"],
+phi = Figure(title='NBINSHI',tools=[hover,"pan,wheel_zoom,box_zoom,reset"],
            y_axis_label='Frequency', x_axis_label='COUNTBINS', background_fill_color="white")
 
 phi.quad(top='hist', bottom='bottom', left='left', right='right',
@@ -129,7 +129,7 @@ phi.quad(top='hist', bottom='bottom', left='left', right='right',
         fill_color="dodgerblue", line_color="black", alpha=0.8,
        hover_fill_color='blue', hover_line_color='black', hover_alpha=0.8)
 
-pmed = figure(title='NBINSMED',tools=[hover2,"pan,wheel_zoom,box_zoom,reset"],
+pmed = Figure(title='NBINSMED',tools=[hover2,"pan,wheel_zoom,box_zoom,reset"],
            y_axis_label='Frequency', x_axis_label='COUNTBINS', background_fill_color="white")
 
 pmed.quad(top='hist', bottom='bottom', left='left', right='right',
@@ -138,7 +138,7 @@ pmed.quad(top='hist', bottom='bottom', left='left', right='right',
        hover_fill_color='green', hover_line_color='black', hover_alpha=0.8)
 
 
-plow = figure(title='NBINSLOW',tools=[hover3,"pan,wheel_zoom,box_zoom,reset"],
+plow = Figure(title='NBINSLOW',tools=[hover3,"pan,wheel_zoom,box_zoom,reset"],
            y_axis_label='Frequency', x_axis_label='COUNTBINS', background_fill_color="white")
 
 

@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -114,7 +114,7 @@ source2_not = ColumnDataSource(data={
 mapper = LinearColorMapper(palette= my_palette,
                            low = np.min(sky), 
                            high = np.max(sky))
-p2 = figure(title='SKY_CONT', 
+p2 = Figure(title='SKY_CONT', 
             x_axis_label='RA', y_axis_label='DEC',
             plot_width=700, plot_height=600,
             tools= [hover, "pan,box_zoom,reset"])

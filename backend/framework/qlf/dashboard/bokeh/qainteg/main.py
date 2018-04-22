@@ -1,6 +1,6 @@
 import sys
 
-from bokeh.plotting import figure
+from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
 from bokeh.io import curdoc
@@ -118,7 +118,7 @@ source2_not = ColumnDataSource(data={
 mapper = LinearColorMapper(palette= my_palette,
                            low = np.min(qainteg), 
                            high = np.max(qainteg))
-p2 = figure(title='INTEG', 
+p2 = Figure(title='INTEG', 
             x_axis_label='RA', y_axis_label='DEC',
             plot_width=750, plot_height=700,
             tools= [hover, "pan,box_zoom,reset"])
