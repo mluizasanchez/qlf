@@ -271,7 +271,7 @@ def histpar(yscale, hist):
 
 
 xhistlabel= "XSIGMA"
-yscale = "log"#"auto" or "log"
+yscale = "auto"#"auto" or "log"
 
 
 
@@ -289,7 +289,7 @@ hist_tooltip_x = """
 """
 
 
-hist, edges = np.histogram(xwsigma['XSIGMA'],'fd')#, bins = Nbins)
+hist, edges = np.histogram(xwsigma['XSIGMA'],'auto')# auto: Maximum of the ‘sturges’ and ‘fd’ estimators.
 
 source_hist = ColumnDataSource(data={
     'hist': hist,
@@ -305,7 +305,7 @@ hover = HoverTool(tooltips=hist_tooltip_x)
 ylabel,yrange,bottomval,histval = histpar(yscale, hist)
 
 p_hist_x = Figure(title='',tools=[hover,"pan,wheel_zoom,box_zoom,reset"],
-           y_axis_label='Frequency + 1', x_axis_label=xhistlabel, background_fill_color="white"
+           y_axis_label= ylabel, x_axis_label=xhistlabel, background_fill_color="white"
         , plot_width=700, plot_height=500
         , x_axis_type="auto",    y_axis_type=yscale
         , y_range=yrange)#, y_range=(1, 11**(int(np.log10(max(hist)))+1) ) )
@@ -332,7 +332,7 @@ hist_tooltip_w = """
 """
 
 
-hist, edges = np.histogram(xwsigma['WSIGMA'], 'fd')# bins = Nbins)
+hist, edges = np.histogram(xwsigma['WSIGMA'], 'auto') # Freedman Diaconis Estimator
 
 source_hist = ColumnDataSource(data={
     'hist': hist,
@@ -348,7 +348,7 @@ hover = HoverTool(tooltips=hist_tooltip_w)
 ylabel,yrange,bottomval,histval = histpar(yscale, hist)
 
 p_hist_w = Figure(title='',tools=[hover,"pan,wheel_zoom,box_zoom,reset"],
-           y_axis_label='Frequency + 1', x_axis_label=xhistlabel, background_fill_color="white"
+           y_axis_label=ylabel, x_axis_label=xhistlabel, background_fill_color="white"
         , plot_width=700, plot_height=500
         , x_axis_type="auto",    y_axis_type=yscale
         ,y_range=yrange)#, y_range=(1, 11**(int(np.log10(max(hist)))+1) ) )

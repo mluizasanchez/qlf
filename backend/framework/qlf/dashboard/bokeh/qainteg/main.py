@@ -134,14 +134,16 @@ p2 = Figure(title='INTEG',
             plot_width=770, plot_height=700,
             tools= [hover, "pan,wheel_zoom,box_zoom,reset,tap"])
 
-radius = 0.016
+radius = 0.012
+radius_hover = 0.0135
+
 
 # Gray Fibers:
 p2.circle('ra', 'dec', source= source2_not, radius= radius, 
             fill_color = 'lightgray', line_color='black', line_width=0.3)
 
 # Gray Fibers: marking the Hover point
-p2.circle('ra','dec', source = source2_not, radius = 0.0186
+p2.circle('ra','dec', source = source2_not, radius = radius_hover
           , fill_color=None, line_color=None
           , line_width=3, hover_line_color='red', hover_fill_color='lightgrey')
 
@@ -163,7 +165,7 @@ taptool.callback = OpenURL(url=url)
 
 
 # marking the Hover point
-p2.circle('ra','dec', source = source2, radius = 0.0186
+p2.circle('ra','dec', source = source2, radius = radius_hover
           , fill_color=None, line_color=None
           , hover_fill_color={'field': 'integ', 'transform': mapper}
           , line_width=3, hover_line_color='red')

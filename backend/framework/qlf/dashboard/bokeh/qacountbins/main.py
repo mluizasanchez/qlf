@@ -78,31 +78,31 @@ name_hi = 'NBINSHIGH'
 name_med = 'NBINSMED'
 name_low = 'NBINSLOW'
 
-def bins_doane(data):
-    # Dane's rule of thumb for bins
+def get_nbins(data):
+    # Doane's rule of thumb for bins
     ndata = len(data)
     mean = np.mean(data)
     sigma = np.std(data)
     b = sum([ (x - mean)**3 for x in data])
     b = b/sum([ (x - mean)**2 for x in data])**(1.5)
     try:
-        loger.info("\n\n****",round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b)))  )
+        logger.info("\n\n****",round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b)))  )
         return int(round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b))))
     except:
-        loger.info(  "\n\n\n Failed Doane's rule:{}".format(np.log2(ndata)) )
+        logger.info(  "\n\n\n Failed Doane's rule:{}".format(np.log2(ndata)) )
         return int(round(np.log2(ndata) + 1 ))
 
 
 try:    
-    bins_hi = bins_doane(countbins[name_hi])
+    bins_hi = get_nbins(countbins[name_hi])
 except:
     bins_hi =15
 try:
-    bins_med = bins_doane(countbins[name_med])
+    bins_med = get_nbins(countbins[name_med])
 except:
     bins_med=17
 try:
-    bins_low = bins_doane(countbins[name_low])# formely: 17
+    bins_low = get_nbins(countbins[name_low])# formely: 17
 except:
     bins_low=17
 
