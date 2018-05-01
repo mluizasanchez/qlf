@@ -221,6 +221,20 @@ def write_description(qa_name):
             <b>{}</b> <br>{}</body>""".format(info_dic[qa_name][0],info_dic[qa_name][1])                  
     return text
 
+def eval_histpar(yscale, hist):
+    """ Common parameters for histograms"""
+    from numpy import log10
+    if yscale == 'log':
+        ylabel = "Frequency + 1"
+        yrange = (1, 1.* 10**(int(log10(max(hist))) +1) )
+        bottomval = 'bottomplusone'
+        histval = 'histplusone'
+    else:
+        ylabel = "Frequency"
+        yrange = (0, 1.1*max(hist))
+        bottomval = 'bottom'
+        histval = 'hist'
+    return [ylabel,yrange,bottomval,histval]
 
 
 
