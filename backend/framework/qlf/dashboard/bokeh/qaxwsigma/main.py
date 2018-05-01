@@ -182,24 +182,28 @@ wmapper = LinearColorMapper(palette= my_palette,
 
 # ======
 # XSIGMA
+
+radius = 0.015
+radius_hover = 0.0165
+
 px = Figure( title = 'XSIGMA', x_axis_label='RA', y_axis_label='DEC'
            , plot_width=700, plot_height=600
            , x_range=Range1d(left, right), y_range=Range1d(bottom, top)
            , tools= [xsigma_hover, "pan,box_zoom,reset,crosshair, tap"])
 
 # Color Map
-px.circle('x1','y1', source = source, name="data", radius = 0.018,
+px.circle('x1','y1', source = source, name="data", radius = radius,
         fill_color={'field': 'xsigma', 'transform': xmapper}, 
          line_color='black', line_width=0.1,
          hover_line_color='red')
 
 # marking the Hover point
-px.circle('x1','y1', source = source, name="data", radius = 0.0186
+px.circle('x1','y1', source = source, name="data", radius = radius_hover
           , hover_fill_color={'field': 'xsigma', 'transform': xmapper}
           , fill_color=None, line_color=None
           , line_width=3, hover_line_color='red')
 
-px.circle('x1','y1', source = source_comp, radius = 0.015,
+px.circle('x1','y1', source = source_comp, radius = radius_hover,
          fill_color = 'lightgray', line_color='black', line_width=0.3)
 
 taptool = px.select(type=TapTool)
@@ -225,13 +229,13 @@ pw = Figure( title = 'WSIGMA', x_axis_label='RA', y_axis_label='DEC'
            , tools= [wsigma_hover, "pan,box_zoom,reset,crosshair,tap"])
 
 # Color Map
-pw.circle('x1','y1', source = source, name="data", radius = 0.018,
+pw.circle('x1','y1', source = source, name="data", radius = radius,
         fill_color={'field': 'wsigma', 'transform': wmapper}, 
          line_color='black', line_width=0.1,
          hover_line_color='red')
 
 # marking the Hover point
-pw.circle('x1','y1', source = source, name="data", radius = 0.0186
+pw.circle('x1','y1', source = source, name="data", radius = radius_hover
           , hover_fill_color={'field': 'wsigma', 'transform': wmapper}
           , fill_color=None, line_color=None
           , line_width=3, hover_line_color='red')
@@ -359,11 +363,12 @@ p_hist_w.quad(top= histval, bottom=bottomval, left='left', right='right',
        hover_fill_color='blue', hover_line_color='black', hover_alpha=0.8)
 
 # -------------------------------------------------------------------------
+from bokeh.models import Spacer
 
 info_col=Div(text=write_description('xwsigma'), width=2*pw.plot_width)
 pxh = column(px,p_hist_x)
 pwh = column(pw,p_hist_w)
-layoutplot= row([pxh,pwh], responsive=False)#, sizing_mode='scale_width')
+layoutplot= row([pxh, Spacer(width=80),pwh], responsive=False)#, sizing_mode='scale_width')
 layout = column(widgetbox(info_col),layoutplot)
 
 curdoc().add_root(layout)
