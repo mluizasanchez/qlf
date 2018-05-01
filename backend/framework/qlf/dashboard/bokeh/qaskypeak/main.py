@@ -245,9 +245,9 @@ p_hist.add_layout(spans)
                           line_dash='dashed', line_width=3)
     p_hist.add_layout(spans)
 """
-row1 = row(p, column(Spacer(height=180), p_hist) )
-p2txt = column(widgetbox(info_col),row1)
-layout = gridplot([[p2txt]]) 
+row1 = column(p, p_hist)
+layout = column(widgetbox(info_col),row1)
+
 
 #logger.info("widths", p.plot_width, p_hist.plot_width)
 # End of Bokeh Block

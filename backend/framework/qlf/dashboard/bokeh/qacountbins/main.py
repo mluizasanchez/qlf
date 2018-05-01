@@ -78,40 +78,11 @@ name_hi = 'NBINSHIGH'
 name_med = 'NBINSMED'
 name_low = 'NBINSLOW'
 
-def get_nbins(data):
-    # Doane's rule of thumb for bins
-    ndata = len(data)
-    mean = np.mean(data)
-    sigma = np.std(data)
-    b = sum([ (x - mean)**3 for x in data])
-    b = b/sum([ (x - mean)**2 for x in data])**(1.5)
-    try:
-        logger.info("\n\n****",round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b)))  )
-        return int(round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b))))
-    except:
-        logger.info(  "\n\n\n Failed Doane's rule:{}".format(np.log2(ndata)) )
-        return int(round(np.log2(ndata) + 1 ))
-
-
-try:    
-    bins_hi = get_nbins(countbins[name_hi])
-except:
-    bins_hi =15
-try:
-    bins_med = get_nbins(countbins[name_med])
-except:
-    bins_med=17
-try:
-    bins_low = get_nbins(countbins[name_low])# formely: 17
-except:
-    bins_low=17
-
-logger.info("\n\n\n{} \n{} \n{}".format(bins_hi, bins_med, bins_low))
 
 hover = HoverTool(tooltips=hist_tooltip)
 hover2 = HoverTool(tooltips=hist_tooltip)
 hover3 = HoverTool(tooltips=hist_tooltip)
-
+bins_hi, bins_med, bins_low = 'doane', 'auto', 'auto' #‘fd’ (Freedman Diaconis Estimator), ‘doane’, sturges
 
 # ===
 hist_hi, edges_hi = np.histogram(countbins[name_hi], bins = bins_hi)

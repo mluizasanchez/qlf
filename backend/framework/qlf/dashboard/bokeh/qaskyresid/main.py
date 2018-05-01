@@ -119,8 +119,6 @@ p1.x_range = p2.x_range
 #-------------------------------------
 # histogram
 
-
-
 xhistlabel= ""
 yscale = "auto"#"auto" or "log"
 
@@ -168,7 +166,7 @@ p_hist.quad(top=histval, bottom=bottomval, left='left', right='right',
         fill_color="dodgerblue", line_color="blue", alpha=0.8,
        hover_fill_color='blue', hover_line_color='black', hover_alpha=0.8)
 
-# Visual lert ranges
+# Visual alert ranges
 from bokeh.models import Span, Label
 logger.info(par['RESID_NORMAL_RANGE'])
 
@@ -195,7 +193,7 @@ p_hist.add_layout(my_label)
 
 # --------------------------------------
 
-txt = Div(text="""<table><tr>
+txt = Div(text="""<table style="text-align:center;font-size:16px;"><tr>
                             <td>{:>40}</td><td>{:<6.5f}</td>
                         </tr>
                         <tr><td>{:>40}</td><td> {:}</td>

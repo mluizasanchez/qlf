@@ -99,10 +99,10 @@ skycont = skycont
 sky = skycont['SKYCONT_FIBER']
 skyfibers = skycont['SKYFIBERID']
 
-ra = [ skycont['RA'][c1:c2][i] for i in skyfibers]
+ra  = [ skycont['RA'][c1:c2][i] for i in skyfibers]
 dec = [ skycont['DEC'][c1:c2][i] for i in skyfibers]
 
-ra_not, dec_not=[],[]
+ra_not, dec_not = [], []
 for i in range(500):
     if i not in skyfibers:
         ra_not.append(skycont['RA'][c1:c2][i])
@@ -130,7 +130,7 @@ radius_hover = 0.0135
 
 p2 = Figure(title='SKY_CONT', 
             x_axis_label='RA', y_axis_label='DEC',
-            plot_width=770, plot_height=700,
+            plot_width=770, plot_height=600,
             tools= [hover, "pan,box_zoom,reset,tap"])
 
 p2.circle('ra','dec', source=source2, radius=radius,
