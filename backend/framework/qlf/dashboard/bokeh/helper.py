@@ -125,6 +125,15 @@ def get_cameras():
 
     return requests.get(api['camera'], params={'paginate': 'null'}).json()
 
+def get_scalar_metrics(process_id, cam):
+    """
+    Returns cam scalar metrics
+    """
+
+    api = requests.get(QLF_API_URL).json()
+
+    return requests.get(api['load_scalar_metrics'], params={'process_id': process_id, 'cam': cam}).json()
+
 
 def init_xy_plot(hover):
     """
@@ -213,9 +222,9 @@ def write_description(qa_name):
           #+"(i.e. In the region covered by each of the 2 amps covering the fiber)."
                   ],
         "skyresid":["Sky Residual", "Median of residuals in each wavelength bin" ],#"Number of wavelength bins above three configured thresholds."],
-        "integ":["Integrate Spectrum","Sum of counts for <i>stars fibers</i>"],
+        "integ":["Integrate Spectrum","Sum of counts for stars fibers"],
           #Number of wavelength bins above three configured thresholds."],
-        "snr":["Calculate SNR",  "Signal-to-noise ratio measurements for individual targets"]}
+        "snr":["Calculate SNR",  "Signal-to-noise ratio measurements for individual targets."]}
     
     text="""<body><p  style="text-align:left; color:#262626; font-size:20px;">
             <b>{}</b> <br>{}</body>""".format(info_dic[qa_name][0],info_dic[qa_name][1])                  

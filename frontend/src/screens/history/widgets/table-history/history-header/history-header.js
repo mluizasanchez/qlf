@@ -5,7 +5,7 @@ import { ArrowDropDown, ArrowDropUp } from 'material-ui-icons';
 
 const styles = {
   arrow: { display: 'flex', alignItems: 'center' },
-  header: { cursor: 'pointer' },
+  header: { cursor: 'pointer', color: 'black' },
 };
 
 export default class HistoryHeader extends React.Component {
@@ -15,6 +15,8 @@ export default class HistoryHeader extends React.Component {
     getHistoryOrdered: PropTypes.func.isRequired,
     asc: PropTypes.bool,
     ordering: PropTypes.string,
+    orderable: PropTypes.bool,
+    selectable: PropTypes.bool,
   };
 
   renderArrow = id => {
@@ -27,16 +29,18 @@ export default class HistoryHeader extends React.Component {
     }
   };
 
+  fetchOrder = id => {
+    if (!id) return;
+    this.props.getHistoryOrdered(id);
+  };
+
   renderHeader = (id, name) => {
     return (
       <div style={styles.arrow}>
-        <span
-          style={styles.header}
-          onClick={() => this.props.getHistoryOrdered(id)}
-        >
+        <span style={styles.header} onClick={() => this.fetchOrder(id)}>
           {name}
         </span>
-        {this.renderArrow(id)}
+        {this.props.orderable ? this.renderArrow(id) : null}
       </div>
     );
   };
@@ -49,14 +53,18 @@ export default class HistoryHeader extends React.Component {
         enableSelectAll={false}
       >
         <TableRow>
-          <TableHeaderColumn>Program</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'Program')}
+          </TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('pk', 'Process ID')}
           </TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('start', 'Process Date')}
           </TableHeaderColumn>
-          <TableHeaderColumn>Process Time</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'Process Time')}
+          </TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('exposure_id', 'Exp ID')}
           </TableHeaderColumn>
@@ -66,8 +74,10 @@ export default class HistoryHeader extends React.Component {
           <TableHeaderColumn>
             {this.renderHeader('dateobs', 'OBS Date')}
           </TableHeaderColumn>
-          <TableHeaderColumn>OBS Time</TableHeaderColumn>
-          <TableHeaderColumn>MJD</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'OBS Time')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'MJD')}</TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('telra', 'RA (hms)')}
           </TableHeaderColumn>
@@ -77,10 +87,14 @@ export default class HistoryHeader extends React.Component {
           <TableHeaderColumn>
             {this.renderHeader('exptime', 'Exp Time(s)')}
           </TableHeaderColumn>
-          <TableHeaderColumn>Airmass</TableHeaderColumn>
-          <TableHeaderColumn>FWHM (arcsec)</TableHeaderColumn>
-          <TableHeaderColumn>QA</TableHeaderColumn>
-          <TableHeaderColumn>View</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'Airmass')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'FWHM (arcsec)')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'QA')}</TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'View')}</TableHeaderColumn>
         </TableRow>
       </TableHeader>
     );
@@ -89,15 +103,17 @@ export default class HistoryHeader extends React.Component {
   renderObservingHistoryHeader = () => {
     return (
       <TableHeader
-        displaySelectAll={true}
+        displaySelectAll={true && this.props.selectable}
         adjustForCheckbox={false}
-        enableSelectAll={true}
+        enableSelectAll={true && this.props.selectable}
         {...this.props}
       >
         <TableRow>
-          <TableHeaderColumn>Program</TableHeaderColumn>
           <TableHeaderColumn>
-            {this.renderHeader('pk', 'Exp ID')}
+            {this.renderHeader('', 'Program')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('exposure_id', 'Exp ID')}
           </TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('tile', 'Tile ID')}
@@ -105,8 +121,10 @@ export default class HistoryHeader extends React.Component {
           <TableHeaderColumn>
             {this.renderHeader('dateobs', 'OBS Date')}
           </TableHeaderColumn>
-          <TableHeaderColumn>OBS Time</TableHeaderColumn>
-          <TableHeaderColumn>MJD</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'OBS Time')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'MJD')}</TableHeaderColumn>
           <TableHeaderColumn>
             {this.renderHeader('telra', 'RA (hms)')}
           </TableHeaderColumn>
@@ -116,10 +134,14 @@ export default class HistoryHeader extends React.Component {
           <TableHeaderColumn>
             {this.renderHeader('exptime', 'Exp Time(s)')}
           </TableHeaderColumn>
-          <TableHeaderColumn>Airmass</TableHeaderColumn>
-          <TableHeaderColumn>FWHM (arcsec)</TableHeaderColumn>
-          <TableHeaderColumn>QA</TableHeaderColumn>
-          <TableHeaderColumn>View</TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'Airmass')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>
+            {this.renderHeader('', 'FWHM (arcsec)')}
+          </TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'QA')}</TableHeaderColumn>
+          <TableHeaderColumn>{this.renderHeader('', 'View')}</TableHeaderColumn>
         </TableRow>
       </TableHeader>
     );

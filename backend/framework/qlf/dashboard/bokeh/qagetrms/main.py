@@ -16,7 +16,7 @@ from bokeh.palettes import (RdYlBu, Colorblind, Viridis256)
 from bokeh.io import output_notebook
 import numpy as np
 
-from dashboard.bokeh.helper import get_url_args, write_description, write_info
+from dashboard.bokeh.helper import get_url_args, write_description, write_info, get_scalar_metrics
 
 import numpy as np
 import logging
@@ -29,26 +29,22 @@ logger = logging.getLogger(__name__)
 args = get_url_args(curdoc)
 
 try:
-    selected_exposure = args['exposure']
+    selected_process_id = args['process_id']
     selected_arm = args['arm']
     selected_spectrograph = args['spectrograph']
 except:
     sys.exit('Invalid args')
 
-# =============================================
-# THIS comes from QLF.CFG
-#
-night = '20190101'
-
 # ============================================
 #  THIS READ yaml files
 #
-from dashboard.bokeh.utils.scalar_metrics import LoadMetrics
 
 cam = selected_arm+str(selected_spectrograph)
-exp = selected_exposure # intentionaly redundant
-lm = LoadMetrics(cam, exp, night);
-metrics, tests  = lm.metrics, lm.tests 
+try:
+    lm = get_scalar_metrics(selected_process_id, cam)
+    metrics, tests  = lm['results']['metrics'], lm['results']['tests']
+except:
+    sys.exit('Could not load metrics')
 
 getrms    = metrics['getrms']
 name = 'RMS_AMP'
@@ -149,6 +145,15 @@ p.xaxis.minor_tick_line_color = None  # turn off x-axis minor ticks
 p.yaxis.major_tick_line_color = None  # turn off y-axis major ticks
 p.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
 
+#infos
+info, nlines = write_info('getrms', tests['getrms'])
+info= """<div> 
+<body><p  style="text-align:left; color:#262626; font-size:20px;">
+            <b>Get RMS</b> <br>Used to calculate RMS of region of 2D image, including overscan.</body></div>"""
+nlines=2
+txt = Div(text=info, width=p.plot_width)
+info_col=Div(text=write_description('getrms'), width=p.plot_width)
+ptxt = column(widgetbox(info_col),p)
 
 #-------------------------------------
 # histogram
@@ -213,4 +218,3 @@ layout = column(ptxt, p_hist)
 # End of Bokeh Block
 curdoc().add_root(layout)
 curdoc().title="GETRMS"
-

@@ -58,8 +58,10 @@ class OfflineContainer extends Component {
     arm: PropTypes.number.isRequired,
     step: PropTypes.number.isRequired,
     spectrograph: PropTypes.number.isRequired,
-    lastProcess: PropTypes.number,
+    lastProcesses: PropTypes.array,
     processId: PropTypes.number,
+    toggleHeader: PropTypes.func.isRequired,
+    lastProcessedId: PropTypes.number,
   };
 
   state = {
@@ -67,10 +69,8 @@ class OfflineContainer extends Component {
   };
 
   navigateToQA = async processId => {
-    this.setState({ loading: true });
-    this.props.navigateToQA();
-    await this.props.getQA(processId);
-    this.setState({ loading: false });
+    const urlProcessId = processId ? 'qa?process_id=' + processId : 'qa';
+    window.open(urlProcessId, 'qa', 'width=850, height=650');
   };
 
   componentWillReceiveProps(nextProps) {
@@ -81,6 +81,22 @@ class OfflineContainer extends Component {
       this.props.pathname !== '/processing-history'
     )
       this.props.getProcessingHistory();
+  }
+
+  searchQA = async processId => {
+    this.setState({ loading: true });
+    await this.props.getQA(processId);
+    this.setState({ loading: false });
+  };
+
+  componentWillMount() {
+    if (window.location.pathname === '/qa') {
+      this.props.toggleHeader();
+      if (window.location.search.includes('process_id=')) {
+        const processId = window.location.search.split('process_id=')[1];
+        this.searchQA(processId);
+      }
+    }
   }
 
   renderLoading = () => {
@@ -107,8 +123,9 @@ class OfflineContainer extends Component {
               endDate={this.props.endDate}
               navigateToQA={this.navigateToQA}
               getHistoryRangeDate={this.props.getProcessingHistoryRangeDate}
-              lastProcess={this.props.lastProcess}
+              lastProcesses={this.props.lastProcesses}
               type={'process'}
+              lastProcessedId={this.props.lastProcessedId}
             />
           )}
         />
@@ -123,8 +140,9 @@ class OfflineContainer extends Component {
               endDate={this.props.endDate}
               navigateToQA={this.navigateToQA}
               getHistoryRangeDate={this.props.getObservingHistoryRangeDate}
-              lastProcess={this.props.lastProcess}
+              lastProcesses={this.props.lastProcesses}
               type={'exposure'}
+              lastProcessedId={this.props.lastProcessedId}
             />
           )}
         />
@@ -189,8 +207,9 @@ export default connect(
     spectrograph: state.qlfOffline.spectrograph,
     startDate: state.qlfOffline.startDate,
     endDate: state.qlfOffline.endDate,
-    lastProcess: state.qlfOffline.lastProcess,
+    lastProcesses: state.qlfOffline.lastProcesses,
     processId: state.qlfOffline.processId,
+    lastProcessedId: state.qlfOnline.processId,
   }),
   dispatch => ({
     getQA: processId => dispatch(getQA(processId)),

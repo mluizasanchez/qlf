@@ -1,6 +1,7 @@
 import React from 'react';
 import { TableRow, TableRowColumn } from 'material-ui/Table';
 import PropTypes from 'prop-types';
+import Checkbox from 'material-ui/Checkbox';
 
 const styles = {
   link: {
@@ -8,17 +9,31 @@ const styles = {
     textDecoration: 'none',
   },
   bold: { fontWeight: 900 },
+  checkbox: {
+    marginTop: '12px',
+    marginLeft: '24px',
+  },
 };
 
 export default class HistoryData extends React.Component {
   static muiName = 'TableRow';
   static propTypes = {
-    lastProcess: PropTypes.number,
     processId: PropTypes.number,
+    lastProcessedId: PropTypes.number,
     row: PropTypes.object,
     type: PropTypes.string,
     children: PropTypes.array,
     selectProcessQA: PropTypes.func.isRequired,
+    selectedExposures: PropTypes.array,
+    onCellClick: PropTypes.func,
+    onCellHover: PropTypes.func,
+    onCellHoverExit: PropTypes.func,
+    onRowClick: PropTypes.func,
+    onRowHover: PropTypes.func,
+    onRowHoverExit: PropTypes.func,
+    rowNumber: PropTypes.number,
+    displayBorder: PropTypes.bool,
+    striped: PropTypes.bool,
   };
 
   formatDate = dateString => {
@@ -37,10 +52,10 @@ export default class HistoryData extends React.Component {
   };
 
   renderProcessingHistory = () => {
-    const lastProcessStyle =
-      process.pk === this.props.lastProcess ? styles.bold : null;
+    const lastProcessed =
+      this.props.lastProcessedId === this.props.row.pk ? styles.bold : null;
     return (
-      <TableRow style={lastProcessStyle}>
+      <TableRow style={lastProcessed}>
         <TableRowColumn />
         <TableRowColumn>{this.props.row.pk}</TableRowColumn>
         <TableRowColumn>{this.formatDate(this.props.row.start)}</TableRowColumn>
@@ -75,18 +90,44 @@ export default class HistoryData extends React.Component {
   renderObservingHistory = () => {
     const {
       processId,
-      lastProcess,
       selectProcessQA,
       row,
-      ...otherProps
+      lastProcessedId,
+      selectedExposures,
+      children,
+      onCellClick,
+      onCellHover,
+      onCellHoverExit,
+      onRowClick,
+      onRowHover,
+      onRowHoverExit,
+      rowNumber,
+      displayBorder,
+      striped,
     } = this.props;
-    const lastProcessStyle =
-      this.props.row.pk === lastProcess ? styles.bold : null;
+    const lastProcessed = lastProcessedId === processId ? styles.bold : null;
+    const selectedExposure =
+      selectedExposures && selectedExposures.includes(rowNumber);
     return (
-      <TableRow style={lastProcessStyle} {...otherProps}>
-        {this.props.children[0]}
+      <TableRow
+        style={lastProcessed}
+        onCellClick={onCellClick}
+        onCellHover={onCellHover}
+        onCellHoverExit={onCellHoverExit}
+        onRowClick={onRowClick}
+        onRowHover={onRowHover}
+        onRowHoverExit={onRowHoverExit}
+        rowNumber={rowNumber}
+        displayBorder={displayBorder}
+        striped={striped}
+      >
+        {children[0] ? (
+          <Checkbox checked={selectedExposure} style={styles.checkbox} />
+        ) : (
+          children[0]
+        )}
         <TableRowColumn />
-        <TableRowColumn>{row.pk}</TableRowColumn>
+        <TableRowColumn>{row.exposure_id}</TableRowColumn>
         <TableRowColumn>{row.tile}</TableRowColumn>
         <TableRowColumn>{this.formatDate(row.dateobs)}</TableRowColumn>
         <TableRowColumn>{this.formatTime(row.dateobs)}</TableRowColumn>

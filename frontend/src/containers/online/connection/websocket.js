@@ -3,7 +3,7 @@ import Websocket from 'react-websocket';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import {
-  updateMonitorState,
+  updateLastProcessAndMonitor,
   updateCameraState,
   updateQA,
 } from '../online-store';
@@ -11,16 +11,19 @@ import {
 class Connection extends Component {
   static propTypes = {
     getWebsocketRef: PropTypes.func.isRequired,
-    updateMonitorState: PropTypes.func.isRequired,
+    updateLastProcessAndMonitor: PropTypes.func.isRequired,
     updateCameraState: PropTypes.func.isRequired,
     updateQA: PropTypes.func.isRequired,
   };
 
   handleData = data => {
     const result = JSON.parse(data);
-    if (result.ingestion) {
+    if (result.lines) {
       const state = {
-        daemonStatus: result.daemon_status ? 'Running' : 'Not Running',
+        daemonStatus: result.daemon_status
+          ? 'Running'
+          : result.daemon_status === false ? 'Not Running' : 'Idle',
+        mainTerminal: result.lines ? result.lines.reverse() : [],
         ingestionTerminal:
           result.ingestion && result.ingestion !== 'Error'
             ? result.ingestion.reverse()
@@ -36,13 +39,14 @@ class Connection extends Component {
       if (result.qa_results && result.qa_results.qa_tests) {
         this.props.updateQA({ qaTests: result.qa_results.qa_tests });
       }
-      this.props.updateMonitorState(state);
+      this.props.updateLastProcessAndMonitor(state);
     } else if (result.cameralog) {
       this.props.updateCameraState({ cameraTerminal: result.cameralog });
     }
   };
 
   storeWebsocketRef = socket => {
+    this.socket = socket;
     this.props.getWebsocketRef(socket);
   };
 
@@ -61,7 +65,8 @@ class Connection extends Component {
 }
 
 export default connect(null, dispatch => ({
-  updateMonitorState: state => dispatch(updateMonitorState(state)),
+  updateLastProcessAndMonitor: state =>
+    dispatch(updateLastProcessAndMonitor(state)),
   updateCameraState: state => dispatch(updateCameraState(state)),
   updateQA: state => dispatch(updateQA(state)),
 }))(Connection);

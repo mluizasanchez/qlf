@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import authentication, permissions, viewsets, filters, status
+from rest_framework import authentication, permissions, viewsets, filters, status, views
 from rest_framework.response import Response
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -11,7 +11,8 @@ from .models import Job, Exposure, Camera, QA, Process, Configuration
 from .serializers import (
     JobSerializer, ExposureSerializer, CameraSerializer,
     QASerializer, ProcessSerializer, ConfigurationSerializer, ProcessJobsSerializer,
-    ProcessingHistorySerializer, SingleQASerializer, ObservingHistorySerializer
+    ProcessingHistorySerializer, SingleQASerializer, ObservingHistorySerializer,
+    ExposuresDateRangeSerializer
 )
 import Pyro4
 from datetime import datetime, timedelta
@@ -23,8 +24,6 @@ from bokeh.embed import autoload_server
 from django.template import loader
 from django.http import HttpResponse
 from django.http import JsonResponse
-
-from dashboard.bokeh.utils.scalar_metrics import LoadMetrics
 
 from django.core.mail import send_mail
 import os
@@ -142,7 +141,6 @@ class ProcessingHistoryViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.Model
 
     queryset = Process.objects.order_by('-pk')
     serializer_class = ProcessingHistorySerializer
-    filter_fields = ('exposure_id',)
 
     # Added to order SerializerMethodFields
     def list(self, request, *args, **kwargs):
@@ -167,18 +165,21 @@ class ProcessingHistoryViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.Model
         else:
             prefix_order = ''
             standard_ordering = ordering
-        if ordering and standard_ordering not in ('exposure_id', '-exposure_id', 'start', '-start'):
+        if ordering and standard_ordering not in ('-pk', 'pk', 'exposure_id', '-exposure_id', 'start', '-start'):
             order_by = '{}exposure__{}'.format(prefix_order,standard_ordering)
             queryset = queryset.order_by(order_by)
+        if self.pagination_class:
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
-        exposure = Exposure.objects.all()
-        start_date = exposure.aggregate(Min('dateobs'))['dateobs__min']
-        end_date = exposure.aggregate(Max('dateobs'))['dateobs__max']
-        response.data['results'] = { "start_date": start_date, "end_date": end_date, "results": serializer.data }
-        return response
+        return Response(serializer.data)
 
 class ObservingHistoryViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.ModelViewSet):
-    """API endpoint for listing processing history"""
+    """API endpoint for listing observing history"""
 
     queryset = Exposure.objects.order_by('-pk')
     serializer_class = ObservingHistorySerializer
@@ -188,7 +189,6 @@ class ObservingHistoryViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.ModelV
     def list(self, request, *args, **kwargs):
         response = super(ObservingHistoryViewSet, self).list(
             request, args, kwargs)
-        ordering = request.query_params.get('ordering')
         datemin = request.query_params.get('datemin')
         datemax = request.query_params.get('datemax')
         queryset = self.filter_queryset(self.get_queryset())
@@ -201,13 +201,15 @@ class ObservingHistoryViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.ModelV
             except:
                 response.data['results'] = { "Error": 'wrong date format' }
                 return response
+        if self.pagination_class:
+            page = self.paginate_queryset(queryset)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        exposure = Exposure.objects.all()
-        start_date = exposure.aggregate(Min('dateobs'))['dateobs__min']
-        end_date = exposure.aggregate(Max('dateobs'))['dateobs__max']
-        response.data['results'] = { "start_date": start_date, "end_date": end_date, "results": serializer.data }
-        return response
+        return Response(serializer.data)
 
 class SingleQAViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.ModelViewSet):
     """API endpoint for listing qa"""
@@ -265,6 +267,39 @@ class ExposureViewSet(DynamicFieldsMixin, DefaultsMixin, viewsets.ModelViewSet):
     serializer_class = ExposureSerializer
     filter_fields = ('exposure_id',)
 
+class LoadScalarMetrics(viewsets.ReadOnlyModelViewSet):
+    def list(self, request, *args, **kwargs):
+        process_id = request.GET.get('process_id')
+        cam = request.GET.get('cam')
+        if process_id is not None:
+            load_scalar_metrics = qlf.load_scalar_metrics(process_id, cam)
+            return JsonResponse({ 'results': load_scalar_metrics })
+        else:
+            return JsonResponse({ 'Error': 'Missing process_id' })
+
+class AddExposure(viewsets.ReadOnlyModelViewSet):
+    def list(self, request, *args, **kwargs):
+        exposure_id = request.GET.get('exposure_id')
+        if exposure_id is not None:
+            load_scalar_metrics = qlf.add_exposures([exposure_id])
+            return JsonResponse({ 'status': 'Exposure added to queue' })
+        else:
+            return JsonResponse({ 'Error': 'Missing exposure_id' })
+
+class ExposuresDateRange(viewsets.ReadOnlyModelViewSet):
+    """API endpoint for listing exposures date range"""
+    queryset = Exposure.objects.order_by('exposure_id')
+
+    def list(self, request, *args, **kwargs):
+        response = super(ExposuresDateRange, self).list(
+            request, args, kwargs)
+        queryset = self.get_queryset()
+        start_date = queryset.aggregate(Min('dateobs'))['dateobs__min']
+        end_date = queryset.aggregate(Max('dateobs'))['dateobs__max']
+        response.data = { "start_date": start_date, "end_date": end_date }
+        return response
+
+    serializer_class = ExposuresDateRangeSerializer
 
 class DataTableExposureViewSet(viewsets.ModelViewSet):
     queryset = Exposure.objects.order_by('exposure_id')

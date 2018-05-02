@@ -11,6 +11,9 @@ const styles = {
   space: {
     marginRight: '2vw',
   },
+  label: {
+    color: 'black',
+  },
 };
 
 export default class SelectDate extends React.Component {
@@ -68,9 +71,10 @@ export default class SelectDate extends React.Component {
     return (
       <div style={styles.container}>
         <DatePicker
-          autoOK={true}
+          autoOk={true}
           style={styles.space}
           floatingLabelText="Start Date"
+          floatingLabelStyle={styles.label}
           hintText="Start Date"
           container="inline"
           minDate={this.state.rangeStartDate}
@@ -80,8 +84,9 @@ export default class SelectDate extends React.Component {
           formatDate={this.formatDate}
         />
         <DatePicker
-          autoOK={true}
+          autoOk={true}
           floatingLabelText="End Date"
+          floatingLabelStyle={styles.label}
           hintText="End Date"
           container="inline"
           minDate={this.state.selectedStartDate || this.state.rangeStartDate}
