@@ -1,6 +1,6 @@
 import os
 import io
-from log import setup_logger
+from log import get_logger
 import subprocess
 import datetime
 import configparser
@@ -9,6 +9,7 @@ import logging
 from multiprocessing import Manager, Lock, Process
 from threading import Thread
 from qlf_models import QLFModels
+from scalar_metrics import LoadMetrics
 
 qlf_root = os.getenv('QLF_ROOT')
 cfg = configparser.ConfigParser()
@@ -20,7 +21,6 @@ logpipeline = cfg.get('main', 'logpipeline')
 desi_spectro_redux = cfg.get('namespace', 'desi_spectro_redux')
 
 logger = logging.getLogger("main_logger")
-pipe_logger = setup_logger('logpipeline', logpipeline)
 
 
 class QLFProcess(object):
@@ -47,9 +47,14 @@ class QLFProcess(object):
         os.makedirs(output_full_dir)
 
         self.data['output_dir'] = output_dir
+        self.logger = get_logger(
+            'logpipeline', logpipeline
+        )
 
     def start_process(self):
         """ Start pipeline. """
+
+        self.logger.info('Night {}'.format(self.data.get('night')))
 
         self.data['start'] = datetime.datetime.now().replace(microsecond=0)
 
@@ -65,9 +70,8 @@ class QLFProcess(object):
         # TODO: ingest configuration file used, this should be done by process
         # self.models.insert_config(process.id)
 
-        pipe_logger.info('\n' * 100)
-        pipe_logger.info('Process ID {}'.format(process.id))
-        pipe_logger.info('ExpID {} started.'.format(self.data.get('expid')))
+        self.logger.info('Process ID {}'.format(process.id))
+        self.logger.info('ExpID {} started.'.format(self.data.get('expid')))
 
         return process.id
 
@@ -78,7 +82,7 @@ class QLFProcess(object):
 
         self.data['duration'] = self.data.get('end') - self.data.get('start')
 
-        pipe_logger.info("ExpID {} ended (runtime: {}).".format(
+        self.logger.info("ExpID {} ended (runtime: {}).".format(
            self.data.get('expid'),
            str(self.data.get('duration'))
         ))
@@ -219,7 +223,7 @@ class Jobs(QLFProcess):
         return_cameras.append(camera)
  
     def ingest_parallel_qas(self):
-        pipe_logger.info('Ingesting QAs...')
+        self.logger.info('Ingesting QAs...')
         start_ingestion = datetime.datetime.now().replace(microsecond=0)
 
         proc_qas = list()
@@ -250,10 +254,13 @@ class Jobs(QLFProcess):
 
         duration_ingestion = datetime.datetime.now().replace(microsecond=0) - start_ingestion
 
-        pipe_logger.info("(ExpID {}) Ingestion complete: {}.".format(
-            self.data.get('expid'), str(duration_ingestion)))
-        pipe_logger.info("Total runtime: %s." % (self.data.get('duration') + duration_ingestion))
-        pipe_logger.info("ExpID {} is ready for analysis".format(self.data.get('expid')))
+        for camera in self.data.get('cameras'):
+             lm = LoadMetrics(camera.get('name'), self.data.get('expid'), self.data.get('night'))
+             lm.save_qa_tests()
+
+        self.logger.info("Ingestion complete: %s." % str(duration_ingestion))
+        self.logger.info("Total runtime: %s." % (self.data.get('duration') + duration_ingestion))
+        self.logger.info("ExpID {} is ready for analysis".format(self.data.get('expid')))
 
     def resume_log(self, line, camera, lock):
         """ """
@@ -265,9 +272,9 @@ class Jobs(QLFProcess):
             line_str = line.split(':')[-1]
 
             if line.find('ERROR') > -1:
-                pipe_logger.error("ERROR: Camera {}: {}".format(camera, line_str))
+                self.logger.error("ERROR: Camera {}: {}".format(camera, line_str))
             elif line.find('CRITICAL') > -1:
-                pipe_logger.critical("CRITICAL: Camera {}: {}".format(camera, line_str))
+                self.logger.critical("CRITICAL: Camera {}: {}".format(camera, line_str))
             else:
                 for stage in self.stages:
                     stage_start = stage.get('start')
@@ -278,7 +285,7 @@ class Jobs(QLFProcess):
 
                         if stage_end.get('count') == self.num_cameras:
                             stage_end['time'] = datetime.datetime.now().replace(microsecond=0)
-                            pipe_logger.info(
+                            self.logger.info(
                                 '{} ended (runtime: {}).'.format(
                                     stage.get('display_name'),
                                     stage_end.get('time') - stage_start.get('time')
@@ -290,10 +297,11 @@ class Jobs(QLFProcess):
 
                         if 'time' not in stage_start:
                             stage_start['time'] = datetime.datetime.now().replace(microsecond=0)
-                            pipe_logger.info('{} started.'.format(stage.get('display_name')))
+                            self.logger.info('{} started.'.format(stage.get('display_name')))
+
 
         except Exception as err:
-            pipe_logger.info(err)
+            self.logger.info(err)
 
         lock.release()
 

@@ -335,7 +335,7 @@ class LoadMetrics:
                 aux1 = self.metrics[i][alert_keys[i]]
             except Exception as e:
                 logger.error('Failed metric alert: '+ str(e)[:20])
-                aux1 = 'None'
+                aux1 = 'FAILURE'
         
             steps_status.append(aux1)
         # end 
@@ -348,13 +348,13 @@ class LoadMetrics:
         except:
             return None
 
-    def load_qa_tests(self):
+    def save_qa_tests(self):
         try:
             preproc = self.get_qa_metric_color('preproc')
             extract = self.get_qa_metric_color('extract')
             fiberfl = self.get_qa_metric_color('fiberfl')
             skysubs = self.get_qa_metric_color('skysubs')
             qa_tests = {'preproc': preproc, 'extract': extract, 'fiberfl': fiberfl, 'skysubs': skysubs }
-            return qa_tests
+            self.models.update_qa_tests(self.cam, qa_tests)
         except:
             logger.error('Camera not found %s' % (self.cam))

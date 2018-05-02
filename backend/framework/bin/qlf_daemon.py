@@ -8,7 +8,7 @@ import sys
 import os
 import errno
 from socket import error as socket_error
-from log import setup_logger
+from log import get_logger
 from procutil import kill_proc_tree
 from qlf_pipeline import Jobs as QLFPipeline
 from scalar_metrics import LoadMetrics
@@ -21,8 +21,8 @@ logfile = cfg.get("main", "logfile")
 logpipeline = cfg.get("main", "logpipeline")
 loglevel = cfg.get("main", "loglevel")
 
-logger = setup_logger("icslogger", logfile, loglevel)
-mainlogger = setup_logger("main_logger", "main_daemon.log", loglevel)
+logger = get_logger("icslogger", logfile, loglevel)
+mainlogger = get_logger("main_logger", "main_daemon.log", loglevel)
 
 
 class QLFAutoRun(Process):
