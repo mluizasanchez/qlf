@@ -1,43 +1,26 @@
 import React, { Component } from 'react';
-import {
-  Table,
-  TableBody,
-  TableHeader,
-  TableHeaderColumn,
-  TableRow,
-  TableRowColumn,
-} from 'material-ui/Table';
-import { ArrowDropDown, ArrowDropUp } from 'material-ui-icons';
-import Proptypes from 'prop-types';
-import { Card } from 'material-ui/Card';
-
-const styles = {
-  arrow: { display: 'flex', alignItems: 'center' },
-  header: { cursor: 'pointer' },
-  card: {
-    borderLeft: 'solid 4px teal',
-    flex: '1',
-    height: '90%',
-    margin: '1em',
-  },
-  link: {
-    cursor: 'pointer',
-    textDecoration: 'none',
-  },
-  bold: { fontWeight: 900 },
-};
+import { Table, TableBody } from 'material-ui/Table';
+import PropTypes from 'prop-types';
+import HistoryHeader from './history-header/history-header';
+import HistoryData from './history-data/history-data';
 
 export default class TableHistory extends Component {
   static propTypes = {
-    getHistory: Proptypes.func.isRequired,
-    getHistoryOrdered: Proptypes.func.isRequired,
-    processes: Proptypes.array.isRequired,
-    navigateToQA: Proptypes.func.isRequired,
-    lastProcess: Proptypes.number,
+    getHistory: PropTypes.func.isRequired,
+    getHistoryOrdered: PropTypes.func.isRequired,
+    rows: PropTypes.array.isRequired,
+    navigateToQA: PropTypes.func.isRequired,
+    onRowSelection: PropTypes.func,
+    type: PropTypes.string.isRequired,
+    selectable: PropTypes.bool,
+    orderable: PropTypes.bool,
+    processId: PropTypes.number,
+    lastProcessedId: PropTypes.number,
+    selectedExposures: PropTypes.array,
   };
 
   state = {
-    processes: undefined,
+    rows: undefined,
     asc: undefined,
     ordering: undefined,
   };
@@ -49,7 +32,7 @@ export default class TableHistory extends Component {
   getHistoryOrdered = async ordering => {
     const order = this.state.asc ? ordering : `-${ordering}`;
     this.setState({
-      processes: await this.props.getHistoryOrdered(order),
+      rows: await this.props.getHistoryOrdered(order),
       asc: !this.state.asc,
       ordering,
     });
@@ -60,111 +43,56 @@ export default class TableHistory extends Component {
   };
 
   renderBody = () => {
+    const isProcessHistory = this.props.type === 'process';
     return (
-      <TableBody showRowHover={true} displayRowCheckbox={false}>
-        {this.props.processes.map((process, id) => {
-          const lastProcessStyle =
-            process.pk === this.props.lastProcess ? styles.bold : null;
+      <TableBody
+        showRowHover={true}
+        displayRowCheckbox={!isProcessHistory && this.props.selectable}
+      >
+        {this.props.rows.map((row, id) => {
+          const processId =
+            isProcessHistory || !row.last_exposure_process_id
+              ? row.pk
+              : row.last_exposure_process_id;
           return (
-            <TableRow style={lastProcessStyle} key={id}>
-              <TableRowColumn>{process.pk}</TableRowColumn>
-              <TableRowColumn>{process.dateobs}</TableRowColumn>
-              <TableRowColumn>{process.datemjd.toFixed(5)}</TableRowColumn>
-              <TableRowColumn>{process.exposure_id}</TableRowColumn>
-              <TableRowColumn>{process.tile}</TableRowColumn>
-              <TableRowColumn>{process.telra}</TableRowColumn>
-              <TableRowColumn>{process.teldec}</TableRowColumn>
-              <TableRowColumn />
-              <TableRowColumn>{process.exptime}</TableRowColumn>
-              <TableRowColumn>{process.airmass}</TableRowColumn>
-              <TableRowColumn />
-              <TableRowColumn>{process.runtime}</TableRowColumn>
-              <TableRowColumn>
-                <span
-                  style={styles.link}
-                  onClick={() => this.selectProcessQA(process.pk)}
-                >
-                  View
-                </span>
-              </TableRowColumn>
-              <TableRowColumn />
-            </TableRow>
+            <HistoryData
+              key={id}
+              processId={processId}
+              row={row}
+              selectProcessQA={this.selectProcessQA}
+              type={this.props.type}
+              lastProcessedId={this.props.lastProcessedId}
+              selectedExposures={this.props.selectedExposures}
+            />
           );
         })}
       </TableBody>
     );
   };
 
-  renderArrow = id => {
-    if (this.state.ordering === id) {
-      if (this.state.asc) {
-        return <ArrowDropUp />;
-      } else {
-        return <ArrowDropDown />;
-      }
-    }
-  };
-
-  renderHeader = (id, name) => {
-    return (
-      <div style={styles.arrow}>
-        <span style={styles.header} onClick={() => this.getHistoryOrdered(id)}>
-          {name}
-        </span>
-        {this.renderArrow(id)}
-      </div>
-    );
-  };
-
   render() {
+    const isProcessHistory = this.props.type === 'process';
     return (
-      <Card style={styles.card}>
+      <div>
         <Table
           fixedHeader={false}
           style={{ width: 'auto', tableLayout: 'auto' }}
           bodyStyle={{ overflow: 'visible' }}
+          selectable={!isProcessHistory && this.props.selectable}
+          multiSelectable={true}
+          onRowSelection={this.props.onRowSelection}
         >
-          <TableHeader
-            displaySelectAll={false}
-            adjustForCheckbox={false}
-            enableSelectAll={false}
-          >
-            <TableRow>
-              <TableHeaderColumn>
-                {this.renderHeader('pk', 'Process ID')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('dateobs', 'Date OBS')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>MJD</TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('exposure_id', 'Exp ID')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('tile', 'Tile ID')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('telra', 'RA (hms)')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('teldec', 'Dec (dms)')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>Program</TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('exptime', 'Exp Time(s)')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>Airmass</TableHeaderColumn>
-              <TableHeaderColumn>FWHM (arcsec)</TableHeaderColumn>
-              <TableHeaderColumn>
-                {this.renderHeader('runtime', 'Run time')}
-              </TableHeaderColumn>
-              <TableHeaderColumn>QA</TableHeaderColumn>
-              <TableHeaderColumn>View</TableHeaderColumn>
-            </TableRow>
-          </TableHeader>
+          <HistoryHeader
+            getHistoryOrdered={this.getHistoryOrdered}
+            type={this.props.type}
+            asc={this.state.asc}
+            ordering={this.state.ordering}
+            selectable={this.props.selectable}
+            orderable={this.props.orderable}
+          />
           {this.renderBody()}
         </Table>
-      </Card>
+      </div>
     );
   }
 }

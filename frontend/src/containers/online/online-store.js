@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import { push } from 'react-router-redux';
+import { fetchLastProcess } from '../offline/offline-store';
 
 function defaultState() {
   return {
     daemonStatus: 'idle',
     exposure: 'none',
+    mainTerminal: [],
     ingestionTerminal: [],
     cameraTerminal: [],
     camerasStages: { b: [], r: [], z: [] },
@@ -21,7 +23,7 @@ function defaultState() {
   };
 }
 
-export function updateMonitorState(state) {
+function updateMonitorState(state) {
   return { type: 'UPDATE_MONITOR_STATE', state };
 }
 
@@ -36,6 +38,18 @@ export function updateQA(state) {
 function selectMetric(step, spectrograph, arm) {
   const state = { step, spectrograph, arm };
   return { type: 'UPDATE_METRIC_SELECT_ONLINE', state };
+}
+
+export function updateLastProcessAndMonitor(state) {
+  return function(dispatch, getState) {
+    if (
+      !getState().qlfOffline.lastProcesses ||
+      getState().qlfOnline.processId !== state.processId
+    ) {
+      dispatch(fetchLastProcess());
+    }
+    dispatch(updateMonitorState(state));
+  };
 }
 
 export function navigateToOnlineMetrics(step, spectrograph, arm) {
@@ -81,6 +95,7 @@ export function qlfOnlineReducers(state = defaultState(), action) {
       return Object.assign({}, state, {
         daemonStatus: action.state.daemonStatus,
         processId: action.state.processId,
+        mainTerminal: action.state.mainTerminal,
         ingestionTerminal: action.state.ingestionTerminal,
         exposure: action.state.exposure,
         camerasStages: action.state.camerasStages,

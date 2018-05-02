@@ -3,13 +3,18 @@ import sys
 from bokeh.plotting import Figure
 from bokeh.layouts import row, column, widgetbox, gridplot
 
+from bokeh.models.widgets import PreText, Div
+from bokeh.models import PrintfTickFormatter
+from dashboard.bokeh.helper import write_info
+
+
 from bokeh.io import curdoc
 from bokeh.io import output_notebook, show, output_file
 
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, Range1d, OpenURL
 from bokeh.models import LinearColorMapper , ColorBar
 from bokeh.models.widgets import Select, Slider
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description, get_scalar_metrics
 
 import numpy as np
 import logging
@@ -22,26 +27,22 @@ logger = logging.getLogger(__name__)
 args = get_url_args(curdoc)
 
 try:
-    selected_exposure = args['exposure']
+    selected_process_id = args['process_id']
     selected_arm = args['arm']
     selected_spectrograph = args['spectrograph']
 except:
     sys.exit('Invalid args')
 
-# =============================================
-# THIS comes from QLF.CFG
-#
-night = '20190101'
-
 # ============================================
 #  THIS READ yaml files
 #
-from dashboard.bokeh.utils.scalar_metrics import LoadMetrics
 
 cam = selected_arm+str(selected_spectrograph)
-exp = selected_exposure # intentionaly redundant
-lm = LoadMetrics(cam, exp, night)
-metrics, tests  = lm.metrics, lm.tests 
+try:
+    lm = get_scalar_metrics(selected_process_id, cam)
+    metrics, tests  = lm['results']['metrics'], lm['results']['tests']
+except:
+    sys.exit('Could not load metrics')
 
 skyresid  = metrics['skyresid']
 
@@ -111,5 +112,13 @@ p2.line('wl', 'wavg_resid', source=skyres_source)
 
 
 p1.x_range = p2.x_range
-layout=column(p1,p2)
-curdoc().add_root(layout)
+
+info, nlines = write_info('skyresid', tests['skyresid'])
+
+txt = PreText(text=info, height=nlines*20, width=p2.plot_width)
+info_col=Div(text=write_description('skyresid'), width=p2.plot_width)
+p2txt = column(widgetbox(info_col), p1, p2)
+
+#layout=column(p1,p2)
+curdoc().add_root(p2txt)
+curdoc().title = "SKYRESID"

@@ -37,8 +37,17 @@ const styles = {
     justifyContent: 'center',
   },
   backButton: {
-    margin: '1vw',
-    width: 'calc(5px + 1vh)',
+    display: 'flex',
+    alignItems: 'center',
+    boxShadow: 'none',
+  },
+  grid: {
+    flex: 1,
+    display: 'grid',
+    marginBottom: '1vh',
+    flexDirection: 'row',
+    gridTemplateColumns: 'auto auto auto auto',
+    marginRight: '1vw',
   },
 };
 
@@ -64,6 +73,7 @@ export default class Metrics extends Component {
     arm: PropTypes.number.isRequired,
     step: PropTypes.number.isRequired,
     spectrograph: PropTypes.number.isRequired,
+    processId: PropTypes.number,
   };
 
   state = {
@@ -101,7 +111,8 @@ export default class Metrics extends Component {
     }
   };
 
-  changeQA = qa => {
+  changeQA = async qa => {
+    if (this.state.qa === qa) await this.setState({ qa: '' });
     this.setState({ qa, loading: true });
   };
 
@@ -151,7 +162,7 @@ export default class Metrics extends Component {
     const height = this.iframeSize().toString();
     const url =
       process.env.REACT_APP_BOKEH +
-      `${this.state.qa}/?exposure=${this.props.exposure}&arm=${
+      `${this.state.qa}/?process_id=${this.props.processId}&arm=${
         this.props.arms[this.state.arm]
       }&spectrograph=${this.state.spectrograph}`;
 
@@ -192,8 +203,9 @@ export default class Metrics extends Component {
               mjd={this.props.mjd}
               date={this.props.date}
               time={this.props.time}
+              processId={this.props.processId}
             />
-            <div style={{ ...styles.controls }}>
+            <div style={styles.grid}>
               <Control
                 change={this.changeStep}
                 title={'Step'}

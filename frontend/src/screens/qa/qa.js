@@ -6,9 +6,9 @@ const styles = {
   container: {
     display: 'flex',
     justifyContent: 'space-around',
-    padding: '1vh 1vw 1vh 1vw',
     flexDirection: 'column',
     marginBottom: '1vh',
+    flex: 1,
   },
 };
 
@@ -24,6 +24,7 @@ export default class QA extends Component {
     navigateToMetrics: PropTypes.func,
     navigateToProcessingHistory: PropTypes.func,
     petalSizeFactor: PropTypes.number.isRequired,
+    processId: PropTypes.number,
   };
 
   state = {
@@ -66,12 +67,12 @@ export default class QA extends Component {
         navigateToProcessingHistory={this.props.navigateToProcessingHistory}
         qaTests={this.props.qaTests}
         renderMetrics={this.renderMetrics}
-        layout={this.state.layout}
         mjd={this.props.mjd}
         exposure={this.props.exposure}
         date={this.props.date}
         time={this.props.time}
         petalSizeFactor={this.props.petalSizeFactor}
+        processId={this.props.processId}
       />
     );
   };

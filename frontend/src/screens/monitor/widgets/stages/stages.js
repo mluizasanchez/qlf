@@ -15,7 +15,7 @@ const tableData = _.map(_.range(10), function() {
   return { pre: '', spec: '', fib: '', sky: '' };
 });
 
-const headerSize = 'calc(1px + 0.6vh + 0.6vw)';
+const headerSize = '11px';
 
 const styles = {
   flex: { display: 'flex', flexDirection: 'row', alignItems: 'center' },
@@ -51,7 +51,7 @@ export default class Stages extends Component {
     enableSelectAll: false,
     deselectOnClickaway: true,
     showCheckboxes: false,
-    columnHeight: '0.7vh',
+    columnHeight: '0.6vh',
     openDialog: true,
   };
 
@@ -92,6 +92,7 @@ export default class Stages extends Component {
               fontSize: headerSize,
               height: this.state.columnHeight,
               whiteSpace: 'normal',
+              paddingRight: '0px',
             }}
             tooltip={'Pre Processing'}
           >
@@ -102,6 +103,7 @@ export default class Stages extends Component {
               fontSize: headerSize,
               height: this.state.columnHeight,
               whiteSpace: 'normal',
+              paddingRight: '0px',
             }}
             tooltip={'Spectral Extraction'}
           >
@@ -112,6 +114,7 @@ export default class Stages extends Component {
               fontSize: headerSize,
               height: this.state.columnHeight,
               whiteSpace: 'normal',
+              paddingRight: '0px',
             }}
             tooltip={'Fiber Flattening'}
           >
@@ -122,6 +125,7 @@ export default class Stages extends Component {
               fontSize: headerSize,
               height: this.state.columnHeight,
               whiteSpace: 'normal',
+              paddingRight: '0px',
             }}
             tooltip={'Sky Subtraction'}
           >
@@ -220,7 +224,11 @@ export default class Stages extends Component {
                           }}
                         >
                           <span
-                            style={{ cursor: 'pointer', color: '#9E9E9E' }}
+                            style={{
+                              cursor: 'pointer',
+                              color: '#9E9E9E',
+                              with: '100%',
+                            }}
                             onClick={() =>
                               this.props.openDialog(index, this.props.arm)
                             }

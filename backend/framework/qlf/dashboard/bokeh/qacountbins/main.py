@@ -15,10 +15,14 @@ from bokeh.palettes import (RdYlBu, Colorblind, Viridis256)
 from bokeh.io import output_notebook
 import numpy as np
 
-from dashboard.bokeh.helper import get_url_args
+from dashboard.bokeh.helper import get_url_args, write_description, get_scalar_metrics
 
 import numpy as np
 import logging
+
+#Additional imports:
+from bokeh.models.widgets import Div
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,28 +32,26 @@ logger = logging.getLogger(__name__)
 args = get_url_args(curdoc)
 
 try:
-    selected_exposure = args['exposure']
+    selected_process_id = args['process_id']
     selected_arm = args['arm']
     selected_spectrograph = args['spectrograph']
 except:
     sys.exit('Invalid args')
 
-# =============================================
-# THIS comes from QLF.CFG
-#
-night = '20190101'
-
 # ============================================
 #  THIS READ yaml files
 #
-from dashboard.bokeh.utils.scalar_metrics import LoadMetrics
 
 cam = selected_arm+str(selected_spectrograph)
-exp = selected_exposure # intentionaly redundant
-lm = LoadMetrics(cam, exp, night);
-metrics, tests  = lm.metrics, lm.tests 
+try:
+    lm = get_scalar_metrics(selected_process_id, cam)
+    metrics, tests  = lm['results']['metrics'], lm['results']['tests']
+except:
+    sys.exit('Could not load metrics')
 
 countbins = metrics['countbins']
+
+
 
 # ============================================
 # THIS: Given the set up in the block above, 
@@ -80,13 +82,28 @@ def bins_doane(data):
     b = sum([ (x - mean)**3 for x in data])
     b = b/sum([ (x - mean)**2 for x in data])**(1.5)
     try:
+        loger.info("\n\n****",round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b)))  )
         return int(round(np.log2(ndata) + 1 + np.log2((1.+b)/(sigma*b))))
     except:
+        loger.info(  "\n\n\n Failed Doane's rule:{}".format(np.log2(ndata)) )
         return int(round(np.log2(ndata) + 1 ))
-    
-bins_hi = bins_doane(countbins[name_hi])
-bins_med = bins_doane(countbins[name_med])
-bins_low = bins_doane(countbins[name_low])# formely: 17
+
+
+try:    
+    bins_hi = bins_doane(countbins[name_hi])
+except:
+    bins_hi =15
+try:
+    bins_med = bins_doane(countbins[name_med])
+except:
+    bins_med=17
+try:
+    bins_low = bins_doane(countbins[name_low])# formely: 17
+except:
+    bins_low=17
+
+logger.info("\n\n\n{} \n{} \n{}".format(bins_hi, bins_med, bins_low))
+
 hover = HoverTool(tooltips=hist_tooltip)
 hover2 = HoverTool(tooltips=hist_tooltip)
 hover3 = HoverTool(tooltips=hist_tooltip)
@@ -145,10 +162,81 @@ plow = Figure(title='NBINSLOW',tools=[hover3,"pan,wheel_zoom,box_zoom,reset"],
 plow.quad(top='hist', bottom='bottom', left='left', right='right',
        source=source_low, fill_color="tomato", line_color="black", alpha=0.8,
        hover_fill_color='red', hover_line_color='black', hover_alpha=0.8)
+# ------------------
+# Text Infos
+html_str="""
+<style>
+    table {
+        font-family: arial, sans-serif;
+        font-size: 12px;
+        border-collapse: collapse;
+        width: 100%;
+    }
 
-#plow.legend.location = "top_left"
-layout = gridplot( [phi,pmed,plow,None], ncols=2, plot_width=600, plot_height=600)
+    td, th {
+        border: 1px solid #dddddd;
+        text-align: center;
+        padding: 8px;
+    }
+    tr:nth-child(even) {
+        background-color: #dddddd;
+                text-align:center;
+    }
+    tr:{text-align:center;}
+</style>
+
+<div  style="text-align:center;padding-left:20px;padding-top:10px;">
+<table>
+  <tr>
+    <th>Parameter</th>
+    <th>Value</th>
+  </tr>
+  <tr>
+    <td>CUT-OFF LOW</td>
+    <td> > param0</td>
+  </tr>
+  <tr>
+    <td>CUT-OFF MEDIUM</td>
+    <td> > param1</td>
+  </tr>
+  <tr>
+    <td>CUT-OFF HIGH</td>
+    <td> > param2</td>
+  </tr>
+    <tr>
+        <th colspan="2"; style="text-align:center">GOOD FIBERS RANGES:</th>
+    </tr>
+    <tr>
+        <td> NORMAL RANGE</td>
+        <td> param3</td>
+    </tr>
+    <tr>
+        <td> WARNING RANGE </td>
+        <td> param4</td>
+    </tr>
+
+</table>
+</div>
+
+"""
+txt_keys=['CUTLO','CUTMED','CUTHI','NGOODFIB_NORMAL_RANGE', 'NGOODFIB_WARN_RANGE']
+for i in range(5):
+    html_str=html_str.replace('%s%s'%("param",str(i)), str(tests['countbins'][txt_keys[i]]) )
+
+div=Div(text=html_str, 
+        width=400, height=200)
+# ---------
+
+
+# plow.legend.location = "top_left"
+# layout = gridplot( [phi,pmed,plow,None], ncols=2, plot_width=600, plot_height=600)
+
+layout_plot = gridplot( [plow,pmed,phi,div], ncols=2, responsive=False, plot_width=600, plot_height=600)
+info_col=Div(text=write_description('countbins'), width=1200)
+layout = column(widgetbox(info_col), layout_plot)
 
 
 # End of Bokeh Block
 curdoc().add_root(layout)
+curdoc().title = "COUNTBINS"
+

@@ -1,7 +1,6 @@
 from dos_monitor import DOSmonitor
 from qlf_models import QLFModels
-from time import sleep
-from multiprocessing import Process, Event, Value
+from multiprocessing import Process, Event, Value, Manager, Lock
 import Pyro4
 import configparser
 import sys
@@ -18,83 +17,71 @@ cfg = configparser.ConfigParser()
 
 cfg.read('%s/framework/config/qlf.cfg' % qlf_root)
 logfile = cfg.get("main", "logfile")
+logpipeline = cfg.get("main", "logpipeline")
 loglevel = cfg.get("main", "loglevel")
 
-logger = setup_logger("main_logger", logfile, loglevel)
+logger = setup_logger("icslogger", logfile, loglevel)
+mainlogger = setup_logger("main_logger", "main_daemon.log", loglevel)
 
 
 class QLFAutoRun(Process):
 
-    def __init__(self):
+    def __init__(self, exposures=None):
         super().__init__()
         self.running = Event()
         self.exit = Event()
-
         self.dos_monitor = DOSmonitor()
-
-        self.last_night = None
         self.process_id = Value('i', 0)
+        self.base_night = self.dos_monitor.get_last_night()
+        self.list_lock = Lock()
+        self.exposures = Manager().list()
 
-        exposure = QLFModels().get_last_exposure()
+        if not exposures:
+            exposures = self.dos_monitor.get_exposures_by_night(
+                self.base_night)
 
-        if exposure:
-            self.last_night = exposure.night
+            for item in exposures:
+                item['discovery'] = True
+                self.exposures.append(item)
+        else:
+            self.add_exposures(exposures)
+
+    def add_exposures(self, exposures):
+        with self.list_lock:
+            for exposure in exposures:
+                item = self.dos_monitor.get_exposure(self.base_night, exposure)
+                self.exposures.append(item)
 
     def run(self):
-        notify_night = False
-        notify_exposure = False
-
         while not self.get_exit():
-            night = self.dos_monitor.get_last_night()
 
-            if night == self.last_night:
-                if not notify_night:
-                    # Monitoring next night
-                    logger.info('Monitoring...')
-                    notify_night = True
-                sleep(10)
+            with self.list_lock:
+                exposure = self.exposures.pop(0) if self.exposures else None
+
+            if self.get_exit():
+                mainlogger.info('Exit is set')
+                break
+
+            if not exposure:
                 continue
 
-            notify_night = False
+            if exposure.get('discovery', None):
+                logger.info('Found expID {}'.format(exposure.get('expid')))
 
-            logger.info('Night {}, waiting for exposures...'.format(night))
+            self.running.set()
 
-            exposures = self.dos_monitor.get_exposures_by_night(night)
-
-            if not exposures:
-                if not notify_exposure:
-                    logger.warn('No exposure was found')
-                    notify_exposure = True
-                sleep(10)
-                continue
-
-            notify_exposure = False
-
-            for exposure in exposures:
-                if self.get_exit():
-                    logger.info('Execution stopped')
-                    break
-
-                logger.info('Found expID {}, processing...'.format(exposure.get('expid')))
-                self.running.set()
-
-                try:
-                    ql = QLFPipeline(exposure)
-                    self.process_id.value = ql.start_process()
-                    ql.start_jobs()
-                    ql.finish_process()
-                except socket_error as serr:
-                    if serr.errno != errno.ECONNREFUSED:
-                        logger.exception('Daemon Error')
-                        raise
-
-                logger.info('ExpID {} finished.'.format(exposure.get('expid')))
+            try:
+                ql = QLFPipeline(exposure)
+                self.process_id.value = ql.start_process()
+                ql.start_jobs()
+                ql.finish_process()
+            except socket_error as serr:
+                if serr.errno != errno.ECONNREFUSED:
+                    mainlogger.exception('Daemon Error')
+                    raise
 
             self.running.clear()
             self.process_id.value = 0
-            self.last_night = night
-
-        logger.info("Bye!")
 
     def get_current_process_id(self):
         """ """
@@ -110,6 +97,7 @@ class QLFAutoRun(Process):
     def get_exit(self):
         """ """
         return self.exit.is_set()
+
 
 # TODO: refactor QLFManualRun
 class QLFManualRun(Process):
@@ -131,19 +119,15 @@ class QLFManualRun(Process):
     def run(self):
         self.exit.clear()
 
-        logger.info(self.exposures)
-
         for exposure in self.exposures:
-            logger.info("Initiating {} exposure processing...".format(exposure.get("expid")))
-
             if self.exit.is_set():
-                logger.info('Execution stopped')
+                mainlogger.info('Execution stopped')
                 break
 
             self.running.set()
             self.current_exposure = exposure
             ql = QLFPipeline(self.current_exposure)
-            logger.info('Executing expid {}...'.format(exposure.get('expid')))
+            mainlogger.info('Executing expid {}...'.format(exposure.get('expid')))
             ql.start_process()
             ql.start_jobs()
             ql.finish_process()
@@ -160,25 +144,26 @@ class QLFManualRun(Process):
     def shutdown(self):
         self.exit.set()
 
+
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class QLFAutomatic(object):
     def __init__(self):
         self.process = False
 
-    def start(self):
+    def start(self, exposures=None):
         if self.process and self.process.is_alive():
             self.process.set_exit(False)
-            logger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
+            mainlogger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
         else:
-            self.process = QLFAutoRun()
+            self.process = QLFAutoRun(exposures)
             self.process.start()
-            logger.info("Starting pid %i..." % self.process.pid)
+            mainlogger.info("Starting pid %i..." % self.process.pid)
 
     def stop(self):
         if self.process and self.process.is_alive():
             self.process.set_exit()
-            logger.info("Stop pid %i" % self.process.pid)
+            mainlogger.info("Stop pid %i" % self.process.pid)
 
             process_id = self.process.get_current_process_id()
             pid = self.process.pid
@@ -189,15 +174,27 @@ class QLFAutomatic(object):
                 model = QLFModels()
                 model.delete_process(process_id)
         else:
-            logger.info("Monitor is not initialized.")
+            mainlogger.info("Monitor is not initialized.")
 
     def reset(self):
         self.stop()
-        model = QLFModels()
-        model.delete_all_cameras()
-        model.delete_all_processes()
-        model.delete_all_exposures()
-        logger.info('Deleted all processes and exposures')
+
+        with open(logfile, 'r+') as ics:
+            ics.truncate()
+
+        with open(logpipeline, 'r+') as pipeline:
+            pipeline.truncate()
+
+    def add_exposures(self, exposures):
+
+        if not isinstance(exposures, list):
+            mainlogger.info("add_exposures function requires a list of exposures")
+            return
+
+        if self.process and self.process.is_alive():
+            self.process.add_exposures(exposures)
+        else:
+            self.start(exposures)
 
     def get_status(self):
         status = False
@@ -221,11 +218,23 @@ class QLFAutomatic(object):
             try:
                 process = job.process
                 exposure = process.exposure
-                lm = LoadMetrics(job.camera_id, process.exposure_id, exposure.night)
-                qa_tests.append({ job.camera_id: lm.load_qa_tests()})
+                lm = LoadMetrics(process_id, job.camera_id, process.exposure_id, exposure.night)
+                qa_tests.append({job.camera_id: lm.load_qa_tests()})
             except:
-                logger.error('qa_tests error camera %s' % (camera.camera))
+                mainlogger.error('qa_tests error camera %s' % job.camera)
         return qa_tests
+
+    def load_scalar_metrics(self, process_id, cam):
+        scalar_metrics = dict()
+        try:
+            process = QLFModels().get_process_by_process_id(process_id)
+            exposure = process.exposure
+            lm = LoadMetrics(process_id, cam, process.exposure_id, exposure.night)
+            scalar_metrics['metrics'] = lm.metrics
+            scalar_metrics['tests'] = lm.tests
+        except:
+            print('load_scalar_metrics error')
+        return scalar_metrics
 
 # TODO: refactor QLFManual
 @Pyro4.expose
@@ -239,18 +248,18 @@ class QLFManual(object):
     def start(self, exposures):
         if self.process and self.process.is_alive():
             self.process.clear()
-            logger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
+            mainlogger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
         else:
             self.process = QLFManualRun(exposures)
             self.process.start()
-            logger.info("Starting pid %i..." % self.process.pid)
+            mainlogger.info("Starting pid %i..." % self.process.pid)
 
     def stop(self):
         if self.process and self.process.is_alive():
-            logger.info("Stop pid %i" % self.process.pid)
+            mainlogger.info("Stop pid %i" % self.process.pid)
             self.process.shutdown()
         else:
-            logger.info("Monitor is not initialized.")
+            mainlogger.info("Monitor is not initialized.")
 
     def get_status(self):
         status = False
@@ -258,7 +267,7 @@ class QLFManual(object):
         if self.process and not self.process.exit.is_set():
             status = True
 
-        logger.info("QLF Manual status: {}".format(status))
+        mainlogger.info("QLF Manual status: {}".format(status))
         return status
 
     def get_current_run(self):

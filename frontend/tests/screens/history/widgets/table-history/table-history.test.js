@@ -8,7 +8,7 @@ import getMuiTheme from 'material-ui/styles/getMuiTheme';
 
 configure({ adapter: new Adapter() });
 
-const processes = [
+const rows = [
   {
     pk: 69,
     dateobs: '2019-01-01T22:00:00Z',
@@ -37,7 +37,7 @@ const processes = [
 
 describe('TableHistory Controls', () => {
   const getHistory = jest.fn(),
-    getHistoryOrdered = jest.fn(() => processes),
+    getHistoryOrdered = jest.fn(() => rows),
     navigateToQA = jest.fn();
   let wrapper;
   beforeEach(() => {
@@ -49,10 +49,11 @@ describe('TableHistory Controls', () => {
     const tableHistory = (
       <MuiThemeProvider muiTheme={getMuiTheme(lightBaseTheme)}>
         <TableHistory
-          processes={processes}
+          rows={rows}
           getHistory={getHistory}
           navigateToQA={navigateToQA}
           getHistoryOrdered={getHistoryOrdered}
+          type={'process'}
         />
       </MuiThemeProvider>
     );
@@ -64,13 +65,13 @@ describe('TableHistory Controls', () => {
     expect(
       wrapper
         .find('TableHeaderColumn')
-        .at(0)
+        .at(1)
         .text()
     ).toBe('Process ID');
     expect(
       wrapper
         .find('TableRowColumn')
-        .at(0)
+        .at(1)
         .text()
     ).toBe('69');
   });
@@ -78,7 +79,7 @@ describe('TableHistory Controls', () => {
   it('orders table', () => {
     wrapper
       .find('span')
-      .at(0)
+      .at(1)
       .simulate('click');
     expect(getHistoryOrdered).toBeCalledWith('-pk');
     wrapper
@@ -91,8 +92,8 @@ describe('TableHistory Controls', () => {
   it('calls navigateToQA', () => {
     wrapper
       .find('span')
-      .at(9)
+      .at(16)
       .simulate('click');
-    expect(navigateToQA).toBeCalledWith(70);
+    expect(navigateToQA).toBeCalledWith(69);
   });
 });

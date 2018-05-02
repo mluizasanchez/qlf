@@ -34,6 +34,10 @@ const styles = {
   spanTitle: {
     alignSelf: 'flex-end',
   },
+  bottom: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
 };
 
 class App extends React.Component {
@@ -48,15 +52,17 @@ class App extends React.Component {
       case '/monitor-realtime':
         return '- Monitor';
       case '/qa':
-        return '- Processing History';
+        return '- QA';
       case '/metrics':
-        return '- Processing History';
+        return '- Metrics';
       case '/qa-realtime':
         return '- QA Realtime';
       case '/metrics-realtime':
         return '- Metrics Realtime';
       case '/processing-history':
         return '- Processing History';
+      case '/observing-history':
+        return '- Observing History';
       default:
         return '';
     }
@@ -112,20 +118,7 @@ class App extends React.Component {
   };
 
   renderTopBar = () => {
-    if (!this.state.displayHeaders)
-      return (
-        <span
-          style={{
-            color: 'gray',
-            margin: '1em',
-            cursor: 'pointer',
-            fontSize: '10px',
-          }}
-          onClick={this.toggleHeader}
-        >
-          Show Menu
-        </span>
-      );
+    if (!this.state.displayHeaders) return;
     const homeAppleTitleStyle =
       this.renderRouteName() === '' ? styles.headerTop : null;
     return (
@@ -139,13 +132,42 @@ class App extends React.Component {
   };
 
   renderBottomBar = () => {
-    if (!this.state.displayHeaders) return;
+    if (!this.state.displayHeaders)
+      return (
+        <span
+          style={{
+            color: 'gray',
+            marginRight: '1em',
+            cursor: 'pointer',
+            fontSize: '10px',
+            display: 'flex',
+            justifyContent: 'flex-end',
+          }}
+          onClick={this.toggleHeader}
+        >
+          Show Menu
+        </span>
+      );
+
     return (
       <AppBar
         showMenuIconButton={false}
         titleStyle={styles.headerBottom}
-        title="© Copyright 2018, LIneA/DESI"
+        title={this.renderBottomBarTitle()}
       />
+    );
+  };
+
+  renderBottomBarTitle = () => {
+    return (
+      <div style={styles.bottom}>
+        <span>© Copyright 2018, LIneA/DESI</span>
+        <span>
+          {process.env.REACT_APP_VERSION
+            ? process.env.REACT_APP_VERSION.substring(0, 7)
+            : ''}
+        </span>
+      </div>
     );
   };
 
@@ -169,7 +191,7 @@ class App extends React.Component {
                 />
               ))}
               <OnlineContainer />
-              <OfflineContainer />
+              <OfflineContainer toggleHeader={this.toggleHeader} />
               {this.renderBottomBar()}
             </div>
           </MuiThemeProvider>
