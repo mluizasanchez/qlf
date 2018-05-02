@@ -65,6 +65,16 @@ dz = metr[name] #getbias['BIAS_AMP']
 
 mapper = LinearColorMapper(palette= Viridis256, low=min(dz),high=max(dz) )
 
+dzmax, dzmin = max(dz), min(dz) 
+if np.log10(dzmax) > 4 or np.log10(dzmin) <-3:
+    ztext = ['{:3.2e}'.format(i) for i in dz]
+    cbarformat = "%2.1e"
+elif np.log10(dzmin)>0:
+    ztext = ['{:4.3f}'.format(i) for i in dz]
+    cbarformat = "%4.2f"
+else:
+    ztext = ['{:5.4f}'.format(i) for i in dz]
+    cbarformat = "%5.4f"
 
 
 source = ColumnDataSource(
@@ -76,7 +86,7 @@ source = ColumnDataSource(
 
         z = dz,
         amp = ['AMP %s'%i for i in range(1,5) ] ,
-        ztext = ['{:3.2e}'.format(i) for i in dz]
+        ztext = ztext#['{:3.2e}'.format(i) for i in dz]
     )
 )
 
@@ -127,7 +137,7 @@ p.text(x="x", y="y_offset2", text="ztext",
        text_font_style="bold", text_font_size="20pt", **text_props)
 p.text(x="x", y="y_offset1", text="amp",
         text_font_size="18pt", **text_props)
-formatter = PrintfTickFormatter(format='%2.1e')
+formatter = PrintfTickFormatter(format=cbarformat)#format='%2.1e')
 color_bar = ColorBar(color_mapper=mapper,  major_label_text_align='left',
                 major_label_text_font_size='10pt', label_standoff=2, location=(0, 0)
                    ,formatter=formatter, title="(ADU)", title_text_baseline="alphabetic" )
@@ -145,7 +155,7 @@ p.yaxis.minor_tick_line_color = None  # turn off y-axis minor ticks
 
 #infos
 info, nlines = write_info('getbias', tests['getbias'])
-txt = PreText(text=info, height=nlines*20, width=p.plot_width)
+txt = PreText(text=info, height=nlines*20, width=2*p.plot_width)
 info_col=Div(text=write_description('getbias'), width=p.plot_width)
 ptxt = column(widgetbox(info_col),p)
 

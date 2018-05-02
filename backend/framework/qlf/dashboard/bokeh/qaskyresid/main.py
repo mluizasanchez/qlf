@@ -157,7 +157,7 @@ ylabel,yrange,bottomval,histval = 'Frequency', (0, 1.1*max(hist)), 'bottom','his
 xhistlabel = "Residuals"
 p_hist = Figure(title='',tools=[hover,"pan,wheel_zoom,box_zoom,reset"],
            y_axis_label=ylabel, x_axis_label=xhistlabel, background_fill_color="white"
-        , plot_width=700, plot_height=500
+        , plot_width=700, plot_height=400
         , x_axis_type="auto",    y_axis_type=yscale
         , y_range=yrange)#, y_range=(1, 11**(int(np.log10(max(hist)))+1) ) )
 
@@ -178,10 +178,10 @@ for ialert in par['RESID_NORMAL_RANGE']:
     p_hist.add_layout(my_label)
 
 for ialert in par['RESID_WARN_RANGE']:
-    spans = Span(location= ialert , dimension='height', line_color='gold',
+    spans = Span(location= ialert , dimension='height', line_color='tomato',
                           line_dash='dotdash', line_width=2)
     p_hist.add_layout(spans)
-    my_label = Label(x=ialert, y=yrange[-1]/2.2, y_units='data', text='Warning Range', text_color='gold', angle=np.pi/2.)
+    my_label = Label(x=ialert, y=yrange[-1]/2.2, y_units='data', text='Warning Range', text_color='tomato', angle=np.pi/2.)
     p_hist.add_layout(my_label)
 
 residmed = skyresid['MED_RESID']
