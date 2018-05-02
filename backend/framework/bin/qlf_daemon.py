@@ -168,12 +168,9 @@ class QLFAutomatic(object):
             process_id = self.process.get_current_process_id()
             pid = self.process.pid
 
-            kill_proc_tree(pid)
+            kill_proc_tree(pid, include_parent=False)
             truncate_logs([logpipeline, logfile])
 
-            if process_id:
-                model = QLFModels()
-                model.delete_process(process_id)
         else:
             mainlogger.info("Monitor is not initialized.")
 
