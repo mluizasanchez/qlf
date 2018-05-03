@@ -89,7 +89,6 @@ export default class QlfApi {
 
   static async getProcessingHistory(start, end, order, offset) {
     if (!start && !end) return;
-    console.log(start, end, order, offset)
     try {
       const processes = await fetch(
         `${
