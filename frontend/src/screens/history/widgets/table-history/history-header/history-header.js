@@ -12,7 +12,7 @@ export default class HistoryHeader extends React.Component {
   static muiName = 'TableHeader';
   static propTypes = {
     type: PropTypes.string.isRequired,
-    getHistoryOrdered: PropTypes.func.isRequired,
+    getHistory: PropTypes.func.isRequired,
     asc: PropTypes.bool,
     ordering: PropTypes.string,
     orderable: PropTypes.bool,
@@ -31,7 +31,7 @@ export default class HistoryHeader extends React.Component {
 
   fetchOrder = id => {
     if (!id) return;
-    this.props.getHistoryOrdered(id);
+    this.props.getHistory(id);
   };
 
   renderHeader = (id, name) => {

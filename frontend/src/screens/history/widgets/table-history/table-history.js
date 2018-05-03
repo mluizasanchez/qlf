@@ -3,11 +3,11 @@ import { Table, TableBody } from 'material-ui/Table';
 import PropTypes from 'prop-types';
 import HistoryHeader from './history-header/history-header';
 import HistoryData from './history-data/history-data';
+import _ from 'lodash';
 
 export default class TableHistory extends Component {
   static propTypes = {
     getHistory: PropTypes.func.isRequired,
-    getHistoryOrdered: PropTypes.func.isRequired,
     rows: PropTypes.array.isRequired,
     navigateToQA: PropTypes.func.isRequired,
     onRowSelection: PropTypes.func,
@@ -17,22 +17,41 @@ export default class TableHistory extends Component {
     processId: PropTypes.number,
     lastProcessedId: PropTypes.number,
     selectedExposures: PropTypes.array,
+    rowsCount: PropTypes.number,
+    startDate: PropTypes.string,
+    endDate: PropTypes.string,
   };
 
   state = {
-    rows: undefined,
     asc: undefined,
-    ordering: undefined,
+    ordering: '-pk',
+    offset: 0,
   };
 
-  componentWillMount() {
-    this.props.getHistory();
+  componentWillReceiveProps(nextProps) {
+    if (
+      nextProps.startDate &&
+      nextProps.endDate &&
+      this.props.endDate !== nextProps.endDate
+    ) {
+      this.props.getHistory(
+        nextProps.startDate,
+        nextProps.endDate,
+        this.state.ordering,
+        this.state.offset
+      );
+    }
   }
 
-  getHistoryOrdered = async ordering => {
+  getHistory = async ordering => {
     const order = this.state.asc ? ordering : `-${ordering}`;
+    this.props.getHistory(
+      this.props.startDate,
+      this.props.endDate,
+      order,
+      this.state.offset
+    );
     this.setState({
-      rows: await this.props.getHistoryOrdered(order),
       asc: !this.state.asc,
       ordering,
     });
@@ -70,6 +89,31 @@ export default class TableHistory extends Component {
     );
   };
 
+  nextPage = async page => {
+    this.props.getHistory(
+      this.props.startDate,
+      this.props.endDate,
+      this.state.ordering,
+      page * 10
+    );
+  };
+
+  renderPagination = () => {
+    if (!this.props.rowsCount) return;
+    const pages = Math.floor(this.props.rowsCount / 10) + 1;
+    return (
+      <div>
+        {_.range(pages).map((page, id) => {
+          return (
+            <span key={id} onClick={() => this.nextPage(page)}>
+              {page + 1}{' '}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
   render() {
     const isProcessHistory = this.props.type === 'process';
     return (
@@ -83,7 +127,7 @@ export default class TableHistory extends Component {
           onRowSelection={this.props.onRowSelection}
         >
           <HistoryHeader
-            getHistoryOrdered={this.getHistoryOrdered}
+            getHistory={this.getHistory}
             type={this.props.type}
             asc={this.state.asc}
             ordering={this.state.ordering}
@@ -92,6 +136,7 @@ export default class TableHistory extends Component {
           />
           {this.renderBody()}
         </Table>
+        {this.renderPagination()}
       </div>
     );
   }
