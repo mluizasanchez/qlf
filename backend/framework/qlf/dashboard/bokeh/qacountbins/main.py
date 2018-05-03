@@ -78,7 +78,7 @@ name_low = 'NBINSLOW'
 hover = HoverTool(tooltips=hist_tooltip)
 hover2 = HoverTool(tooltips=hist_tooltip)
 hover3 = HoverTool(tooltips=hist_tooltip)
-bins_hi, bins_med, bins_low = 'doane', 'auto', 'auto' #‘fd’ (Freedman Diaconis Estimator), ‘doane’, sturges
+bins_hi, bins_med, bins_low = 'sqrt', 'sqrt', 'sqrt' #‘fd’ (Freedman Diaconis Estimator), ‘doane’, sturges
 
 # ===
 hist_hi, edges_hi = np.histogram(countbins[name_hi], bins = bins_hi)
