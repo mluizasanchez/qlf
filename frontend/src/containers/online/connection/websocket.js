@@ -38,6 +38,8 @@ class Connection extends Component {
       };
       if (result.qa_results && result.qa_results.qa_tests) {
         this.props.updateQA({ qaTests: result.qa_results.qa_tests });
+      } else if (result.qa_results === 'Missing process_id') {
+        this.props.updateQA({ qaTests: [] });
       }
       this.props.updateLastProcessAndMonitor(state);
     } else if (result.cameralog) {
