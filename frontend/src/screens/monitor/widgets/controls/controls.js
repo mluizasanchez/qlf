@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from 'material-ui/Button';
 import PropTypes from 'prop-types';
 
 const styles = {
@@ -36,7 +36,8 @@ export default class Controls extends Component {
 
   renderStartOrStop = () => {
     return this.props.daemonStatus === 'Running' ? (
-      <RaisedButton
+      <Button
+        variant="raised"
         label="Stop"
         style={styles.button}
         labelStyle={{ ...styles.buttonLabel, ...styles.white }}
@@ -45,7 +46,8 @@ export default class Controls extends Component {
         onMouseDown={this.stopPipeline}
       />
     ) : (
-      <RaisedButton
+      <Button
+        variant="raised"
         label="Start"
         style={styles.button}
         labelStyle={{ ...styles.buttonLabel, ...styles.white }}

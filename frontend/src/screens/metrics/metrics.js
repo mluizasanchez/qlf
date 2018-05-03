@@ -4,7 +4,7 @@ import Control from './control/control';
 import MetricSelect from './metric-select/metric-select';
 import Iframe from 'react-iframe';
 import { FadeLoader } from 'halogenium';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from 'material-ui/Button';
 import Status from '../../components/status/status';
 
 const styles = {
@@ -221,7 +221,8 @@ export default class Metrics extends Component {
                 title={'Arm'}
                 value={this.props.arms[this.state.arm]}
               />
-              <RaisedButton
+              <Button
+                variant="raised"
                 label={'Steps'}
                 secondary={true}
                 style={styles.backButton}

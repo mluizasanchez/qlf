@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Card, CardTitle } from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import Button from 'material-ui/Button';
 import PropTypes from 'prop-types';
 
 const styles = {
@@ -89,7 +89,7 @@ export default class MetricSelect extends Component {
           .toUpperCase()
           .concat(buttonsStatus[index] ? ' ✓' : ' ✖︎');
         return (
-          <FlatButton
+          <Button
             key={index}
             labelStyle={{ ...selected, ...styles.metricLabel }}
             onClick={() => this.props.selectQA('qa' + qa)}
@@ -102,7 +102,7 @@ export default class MetricSelect extends Component {
         );
       } else {
         return (
-          <FlatButton
+          <Button
             key={index}
             labelStyle={{ ...selected, ...styles.metricLabel }}
             onClick={() => this.props.selectQA('qa' + qa)}

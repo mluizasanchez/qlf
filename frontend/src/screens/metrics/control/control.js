@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Card, CardTitle } from 'material-ui/Card';
-import FlatButton from 'material-ui/FlatButton';
+import Button from 'material-ui/Button';
 import PropTypes from 'prop-types';
 
 const styles = {
@@ -52,14 +52,14 @@ export default class Control extends Component {
           title={this.props.title}
         />
         <div style={styles.select}>
-          <FlatButton
+          <Button
             style={styles.button}
             label="<"
             primary={true}
             onClick={() => this.props.change('prev')}
           />
           <span style={styles.value}>{this.props.value}</span>
-          <FlatButton
+          <Button
             style={styles.button}
             label=">"
             primary={true}

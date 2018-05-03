@@ -1,6 +1,6 @@
 import React from 'react';
 import Dialog from 'material-ui/Dialog';
-import FlatButton from 'material-ui/FlatButton';
+import Button from 'material-ui/Button';
 import PropTypes from 'prop-types';
 import Terminal from '../terminal/terminal';
 
@@ -40,7 +40,7 @@ export default class CameraDialog extends React.Component {
 
   render() {
     const actions = [
-      <FlatButton
+      <Button
         key={1}
         label="Close"
         primary={true}

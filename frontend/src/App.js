@@ -1,17 +1,22 @@
 import React from 'react';
-import lightBaseTheme from 'material-ui/styles/baseThemes/lightBaseTheme';
-import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import getMuiTheme from 'material-ui/styles/getMuiTheme';
+import { MuiThemeProvider, createMuiTheme } from 'material-ui/styles';
 import AppBar from 'material-ui/AppBar';
 import Landing from './screens/landing/landing';
-import { Route } from 'react-router';
+import { Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store, history } from './store';
-import Sidemenu from './screens/side-menu/side-menu';
 import { ConnectedRouter } from 'react-router-redux';
 import logo from './assets/DESILogo.png';
 import OnlineContainer from './containers/online/online-container';
 import OfflineContainer from './containers/offline/offline-container';
+import Toolbar from 'material-ui/Toolbar';
+import Typography from 'material-ui/Typography';
+
+const theme = createMuiTheme({
+  palette: {
+    type: 'light', // Switching the dark mode on is a single property value change.
+  },
+});
 
 const styles = {
   headerTop: {
@@ -42,7 +47,6 @@ const styles = {
 
 class App extends React.Component {
   state = {
-    openDrawer: false,
     url: '/',
     displayHeaders: true,
   };
@@ -66,14 +70,6 @@ class App extends React.Component {
       default:
         return '';
     }
-  };
-
-  openDrawer = () => {
-    this.setState({ openDrawer: true });
-  };
-
-  closeDrawer = url => {
-    this.setState({ openDrawer: false, url });
   };
 
   updateUrl = url => {
@@ -119,15 +115,18 @@ class App extends React.Component {
 
   renderTopBar = () => {
     if (!this.state.displayHeaders) return;
-    const homeAppleTitleStyle =
-      this.renderRouteName() === '' ? styles.headerTop : null;
+    // const homeAppleTitleStyle =
+    //   this.renderRouteName() === '' ? styles.headerTop : null;
     return (
-      <AppBar
-        titleStyle={homeAppleTitleStyle}
-        showMenuIconButton={this.showMenuIcon()}
-        onLeftIconButtonTouchTap={this.openDrawer}
-        title={this.renderAppBar()}
-      />
+      <div>
+        <AppBar position="static" color="default">
+          <Toolbar>
+            <Typography variant="title" color="inherit">
+              {this.renderAppBar()}
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </div>
     );
   };
 
@@ -175,13 +174,9 @@ class App extends React.Component {
     return (
       <Provider store={store}>
         <ConnectedRouter history={history}>
-          <MuiThemeProvider muiTheme={getMuiTheme(lightBaseTheme)}>
+          <MuiThemeProvider theme={theme}>
             <div>
               {this.renderTopBar()}
-              <Sidemenu
-                openDrawer={this.state.openDrawer}
-                closeDrawer={this.closeDrawer}
-              />
               {['/', '/about', '/help', '/tutorials', '/contact'].map(path => (
                 <Route
                   exact

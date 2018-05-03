@@ -1,7 +1,7 @@
 import React from 'react';
 import TextField from 'material-ui/TextField';
 import Recaptcha from 'react-recaptcha';
-import RaisedButton from 'material-ui/RaisedButton';
+import Button from 'material-ui/Button';
 import QlfApi from '../../../../containers/offline/connection/qlf-api';
 
 const styles = {
@@ -106,8 +106,9 @@ export default class ContactUs extends React.Component {
             render="explicit"
             verifyCallback={this.verifyCallback}
           />
-          <RaisedButton
+          <Button
             label="submit"
+            variant="raised"
             style={{ margin: '1em' }}
             labelStyle={{ color: 'white' }}
             backgroundColor={'#00C853'}

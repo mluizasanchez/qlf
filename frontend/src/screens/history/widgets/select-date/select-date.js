@@ -1,6 +1,7 @@
 import React from 'react';
-import DatePicker from 'material-ui/DatePicker';
+// import DatePicker from 'material-ui/DatePicker';
 import Proptypes from 'prop-types';
+import TextField from 'material-ui/TextField';
 
 const styles = {
   container: {
@@ -71,7 +72,7 @@ export default class SelectDate extends React.Component {
   render() {
     return (
       <div style={styles.container}>
-        <DatePicker
+        <TextField
           autoOk={true}
           style={styles.space}
           floatingLabelText="Start Date"
@@ -80,11 +81,11 @@ export default class SelectDate extends React.Component {
           container="inline"
           minDate={this.state.rangeStartDate}
           maxDate={this.state.selectedEndDate || this.state.rangeEndDate}
-          value={this.state.selectedStartDate}
+          defaultValue={this.state.selectedStartDate}
           onChange={this.changeStart}
           formatDate={this.formatDate}
         />
-        <DatePicker
+        <TextField
           autoOk={true}
           floatingLabelText="End Date"
           floatingLabelStyle={styles.label}
@@ -92,7 +93,7 @@ export default class SelectDate extends React.Component {
           container="inline"
           minDate={this.state.selectedStartDate || this.state.rangeStartDate}
           maxDate={this.state.rangeEndDate}
-          value={this.state.selectedEndDate}
+          defaultValue={this.state.selectedEndDate}
           onChange={this.changeEnd}
           formatDate={this.formatDate}
         />

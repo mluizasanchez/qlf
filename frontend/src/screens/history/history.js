@@ -2,16 +2,22 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import TableHistory from './widgets/table-history/table-history';
 import SelectDate from './widgets/select-date/select-date';
-import { Tabs, Tab } from 'material-ui/Tabs';
-import { Card } from 'material-ui/Card';
+import Tab from 'material-ui/Tabs';
+import Tabs from 'material-ui/Tabs';
+import Card from 'material-ui/Card';
 import { Toolbar, ToolbarGroup, ToolbarSeparator } from 'material-ui/Toolbar';
-import FontIcon from 'material-ui/FontIcon';
+import Icon from 'material-ui/Icon';
 import Dialog from 'material-ui/Dialog';
-import FlatButton from 'material-ui/FlatButton';
+import Button from 'material-ui/Button';
 import QlfApi from '../../containers/offline/connection/qlf-api';
 import _ from 'lodash';
+import { withStyles } from 'material-ui/styles';
+import AppBar from 'material-ui/AppBar';
 
 const styles = {
+  appBar: {},
+  root: {},
+  tabs: {},
   card: {
     borderLeft: 'solid 4px teal',
     flex: '1',
@@ -20,7 +26,7 @@ const styles = {
   },
 };
 
-export default class History extends Component {
+class History extends Component {
   static propTypes = {
     getHistory: PropTypes.func.isRequired,
     navigateToQA: PropTypes.func.isRequired,
@@ -31,6 +37,7 @@ export default class History extends Component {
     type: PropTypes.string.isRequired,
     lastProcessedId: PropTypes.number,
     rowsCount: PropTypes.number,
+    classes: PropTypes.object,
   };
 
   renderSelectDate = () => {
@@ -132,15 +139,14 @@ export default class History extends Component {
     return (
       <Toolbar>
         <ToolbarGroup firstChild={true}>
-          <FontIcon
+          <Icon
             className="material-icons"
             title="Clear QA"
             onClick={() => this.props.navigateToQA(0)}
           >
             clear_all
-          </FontIcon>
-          <ToolbarSeparator />
-          <FontIcon
+          </Icon>
+          <Icon
             className="material-icons"
             title="Refresh"
             onClick={() =>
@@ -153,8 +159,7 @@ export default class History extends Component {
             }
           >
             refresh
-          </FontIcon>
-          <ToolbarSeparator />
+          </Icon>
           {this.renderSelectDate()}
         </ToolbarGroup>
         {this.renderReprocessButton()}
@@ -177,13 +182,13 @@ export default class History extends Component {
     return (
       <ToolbarGroup>
         <ToolbarSeparator />
-        <FontIcon
+        <Icon
           className="material-icons"
           title="Replay"
           onClick={this.handleOpenDialog}
         >
           replay
-        </FontIcon>
+        </Icon>
       </ToolbarGroup>
     );
   };
@@ -205,22 +210,26 @@ export default class History extends Component {
 
   render() {
     const actions = [
-      <FlatButton
+      <Button
         key={0}
         label="Cancel"
         primary={true}
         onClick={this.handleCloseDialog}
       />,
-      <FlatButton
+      <Button
         key={1}
         label="Submit"
         primary={true}
         onClick={this.reprocessExposure}
       />,
     ];
+    console.log(this.props.classes);
 
     return (
-      <div style={{ WebkitAppRegion: 'no-drag' }}>
+      <div
+        className={this.props.classes.root}
+        style={{ WebkitAppRegion: 'no-drag' }}
+      >
         <Dialog
           actions={actions}
           modal={false}
@@ -229,18 +238,23 @@ export default class History extends Component {
         >
           Reprocess {this.exposuresToReprocess()}?
         </Dialog>
-        <Card style={styles.card}>
-          <Tabs value={this.state.value} onChange={this.handleChange}>
-            <Tab label="Most Recent" value="last">
-              {this.renderLastProcesses()}
-            </Tab>
-            <Tab label="History" value="history">
-              {this.renderToolbar()}
-              {this.renderRows()}
-            </Tab>
-          </Tabs>
+        <Card className={this.props.classes.card} style={styles.card}>
+          <AppBar className={this.props.classes.appBar} position="static">
+            <Tabs
+              className={this.props.classes.tabs}
+              value={this.state.value}
+              onChange={this.handleChange}
+            >
+              <Tab label="Most Recent" value="last" />
+              <Tab label="History" value="history" />
+            </Tabs>
+          </AppBar>
+          {this.state.value === 'last' && this.renderLastProcesses()}
+          {this.state.value === 'history' && this.renderRows()}
         </Card>
       </div>
     );
   }
 }
+
+export default withStyles(styles)(History);
