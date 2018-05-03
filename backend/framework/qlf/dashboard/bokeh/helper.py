@@ -212,7 +212,7 @@ def write_description(qa_name):
         "xwsigma":["XWSigma","Calculate PSF sigma in spatial and wavelength directions independently using "
           +"configured sky lines"],
         "countbins":["Count Spectral Bins","Count the number of wavelength bins above three configured thresholds."],
-        "skycont":["Sky Continuum","Measurement of sky continuum in configured inter-line sky regions on <i>sky fibers</i>"
+        "skycont":["Sky Continuum","Measurement of sky continuum in configured inter-line sky regions on <i>sky fibers</i> "
           #+"There are at least two such regions configured per half-fiber (i.e. In the region covered by each of the " 
           #+"2 amps covering the fiber)."
                   ],
