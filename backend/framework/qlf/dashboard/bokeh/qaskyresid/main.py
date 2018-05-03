@@ -11,6 +11,7 @@ from dashboard.bokeh.helper import write_info, get_scalar_metrics
 from bokeh.io import curdoc
 from bokeh.io import output_notebook, show, output_file
 
+from bokeh.models import Span, Label
 from bokeh.models import ColumnDataSource, HoverTool, TapTool, Range1d, OpenURL
 from bokeh.models import LinearColorMapper, ColorBar
 from bokeh.models.widgets import Select, Slider
@@ -164,7 +165,6 @@ p_hist.quad(top=histval, bottom=bottomval, left='left', right='right',
        hover_fill_color='blue', hover_line_color='black', hover_alpha=0.8)
 
 # Visual alert ranges
-from bokeh.models import Span, Label
 logger.info(par['RESID_NORMAL_RANGE'])
 
 for ialert in par['RESID_NORMAL_RANGE']:

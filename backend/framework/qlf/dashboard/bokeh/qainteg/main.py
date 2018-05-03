@@ -133,14 +133,14 @@ p2 = Figure(title='INTEG',
 radius = 0.012
 radius_hover = 0.0135
 
-radius = 0.016
+
 
 # Gray Fibers:
 p2.circle('ra', 'dec', source= source2_not, radius= radius, 
             fill_color = 'lightgray', line_color='black', line_width=0.3)
 
 # Gray Fibers: marking the Hover point
-p2.circle('ra','dec', source = source2_not, radius = radius_hover
+p2.circle('ra','dec', source = source2_not, radius = radius
           , fill_color=None, line_color=None
           , line_width=3, hover_line_color='red', hover_fill_color='lightgrey')
 
