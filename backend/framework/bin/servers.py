@@ -1,6 +1,6 @@
-from qlf_models import QLFModels
-from qlf_interface import QLFInterface
+from monitoring import Monitoring
 from exposure_generator import ExposureGenerator
+from qlf_models import QLFModels
 import Pyro4
 import configparser
 import sys
@@ -8,6 +8,7 @@ import os
 from log import get_logger
 from procutil import kill_proc_tree
 from scalar_metrics import LoadMetrics
+from clients import get_exposure_generator
 
 qlf_root = os.getenv('QLF_ROOT')
 cfg = configparser.ConfigParser()
@@ -29,45 +30,40 @@ gen_logger = get_logger(__name__, os.path.join(qlf_root, "exposure_generator.log
 @Pyro4.behavior(instance_mode="single")
 class QLFInterface(object):
 
-    process = False
+    monitoring = False
+
+    # TODO: is provisional while we do not have the ICS.
+    generator = get_exposure_generator()
 
     def start(self):
-        if self.process and self.process.is_alive():
-            self.process.set_exit(False)
-            logger.info("Monitor is already initialized (pid: %i)." % self.process.pid)
+        if self.monitoring and self.monitoring.is_alive():
+            self.monitoring.set_exit(False)
+            logger.info("Monitor is already initialized (pid: %i)." % self.monitoring.pid)
         else:
-            self.process = QLFInterface()
-            self.process.start()
-            logger.info("Starting pid %i..." % self.process.pid)
+            self.monitoring = Monitoring()
+            self.monitoring.start()
+            logger.info("Starting pid %i..." % self.monitoring.pid)
+
+        self.generator.start()
 
     def stop(self):
-        if self.process and self.process.is_alive():
-            self.process.set_exit()
-            logger.info("Stop pid %i" % self.process.pid)
+        if self.monitoring and self.monitoring.is_alive():
+            self.monitoring.set_exit()
+            logger.info("Stop pid %i" % self.monitoring.pid)
 
-            process_id = self.process.get_current_process_id()
-            pid = self.process.pid
+            self.monitoring.get_current_process_id()
+            pid = self.monitoring.pid
 
             kill_proc_tree(pid, include_parent=False)
-
-            if process_id:
-                model = QLFModels()
-                model.delete_process(process_id)
         else:
             logger.info("Monitor is not initialized.")
 
-    def reset(self):
-        self.stop()
-        model = QLFModels()
-        model.delete_all_cameras()
-        model.delete_all_processes()
-        model.delete_all_exposures()
-        logger.info('Deleted all processes and exposures')
+        self.generator.stop()
 
     def get_status(self):
         status = False
 
-        if self.process and not self.process.get_exit():
+        if self.monitoring and not self.monitoring.get_exit():
             status = True
 
         return status
@@ -75,12 +71,13 @@ class QLFInterface(object):
     def is_running(self):
         running = False
 
-        if self.process and self.process.running.is_set():
+        if self.monitoring and self.monitoring.running.is_set():
             running = True
 
         return running
 
-    def qa_tests(self):
+    @staticmethod
+    def qa_tests():
         model = QLFModels()
         for camera in model.get_cameras():
             try:
@@ -88,7 +85,7 @@ class QLFInterface(object):
                 lm = LoadMetrics(camera.camera, exposure.exposure_id, exposure.night)
                 lm.save_qa_tests()
             except:
-                logger.error('qa_tests error camera %s' % (camera.camera))
+                logger.error('qa_tests error camera %s' % camera.camera)
 
 
 @Pyro4.expose
@@ -118,13 +115,21 @@ class ExposureEmulator(object):
             gen_logger.info("Exposure generator is not initialized.")
             return dict()
 
+    # def get_exposure_summary(self, date_range=None, expid_range=None, require_data_written=True):
+    #   # TODO
+    #   return
+    #
+    # def get_exposure_files(self, expid, dest=None, file_class=['desi', 'fibermap'], overwrite=True):
+    #   # TODO
+    #   return
+
 
 def main():
     try:
-        interface = os.environ.get('QLF_INTERFACE', 'qlf.interface')
+        interface = os.environ.get('QLF_DAEMON_NS', 'qlf.daemon')
         emulator = os.environ.get('EXPOSURE_EMULATOR', 'exposure.emulator')
-        host = os.environ.get('PYROSERVER', 'localhost')
-        port = int(os.environ.get('PYROPORT', '56005'))
+        host = os.environ.get('QLF_DAEMON_HOST', 'localhost')
+        port = int(os.environ.get('QLF_DAEMON_PORT', '56005'))
     except Exception as err:
         logger.error(err)
         sys.exit(1)

@@ -2,7 +2,7 @@ import os
 import io
 from log import get_logger
 import subprocess
-import datetime
+from datetime import datetime
 import configparser
 import shutil
 import logging
@@ -23,89 +23,16 @@ desi_spectro_redux = cfg.get('namespace', 'desi_spectro_redux')
 logger = logging.getLogger("main_logger")
 
 
-class QLFProcess(object):
+class QLFProcess(Thread):
     """ Class responsible for managing Quick Look pipeline process. """
 
     def __init__(self, data):
+        super().__init__()
         self.pipeline_name = 'Quick Look'
         self.data = data
-        self.models = QLFModels()
 
-        output_dir = os.path.join(
-            'exposures',
-            self.data.get('night'),
-            self.data.get('zfill')
-        )
-
-        output_full_dir = os.path.join(desi_spectro_redux, output_dir)
-
-        # Remove old dir
-        if os.path.isdir(output_full_dir):
-            shutil.rmtree(output_full_dir)
-
-        # Make output dir
-        os.makedirs(output_full_dir)
-
-        self.data['output_dir'] = output_dir
-        self.logger = get_logger(
-            'logpipeline', logpipeline
-        )
-
-    def start_process(self):
-        """ Start pipeline. """
-
-        self.logger.info('Night {}'.format(self.data.get('night')))
-
-        self.data['start'] = datetime.datetime.now().replace(microsecond=0)
-
-        # create process in database and obtain the process id
-        process = self.models.insert_process(
-            self.data,
-            self.pipeline_name
-        )
-
-        self.data['process_id'] = process.id
-        self.data['status'] = process.status
-
-        # TODO: ingest configuration file used, this should be done by process
-        # self.models.insert_config(process.id)
-
-        self.logger.info('Process ID {}'.format(process.id))
-        self.logger.info('ExpID {} started.'.format(self.data.get('expid')))
-
-        return process.id
-
-    def finish_process(self):
-        """ Finish pipeline. """
-
-        self.data['end'] = datetime.datetime.now().replace(microsecond=0)
-
-        self.data['duration'] = self.data.get('end') - self.data.get('start')
-
-        self.logger.info("ExpID {} ended (runtime: {}).".format(
-           self.data.get('expid'),
-           str(self.data.get('duration'))
-        ))
-
-        self.models.update_process(
-            process_id=self.data.get('process_id'),
-            end=self.data.get('end'),
-            process_dir=self.data.get('output_dir'),
-            status=self.data.get('status')
-        )
-
-        proc = Thread(target=self.ingest_parallel_qas)
-        proc.start()
-
-
-class Jobs(QLFProcess):
-
-    def __init__(self, data):
-
-        super().__init__(data)
         self.num_cameras = len(self.data.get('cameras'))
 
-        # TODO: improvements - get stages/steps in database
         self.stages = [
             {
                 "display_name": "Pre Processing",
@@ -129,6 +56,55 @@ class Jobs(QLFProcess):
             }
         ]
 
+        self.models = QLFModels()
+
+        output_dir = os.path.join(
+            'exposures',
+            self.data.get('night'),
+            self.data.get('zfill')
+        )
+
+        output_full_dir = os.path.join(desi_spectro_redux, output_dir)
+
+        # Remove old dir
+        if os.path.isdir(output_full_dir):
+            shutil.rmtree(output_full_dir)
+
+        # Make output dir
+        os.makedirs(output_full_dir)
+
+        self.data['output_dir'] = output_dir
+        self.logger = get_logger(
+            'logpipeline', logpipeline
+        )
+
+    def run(self):
+        """ Start pipeline. """
+
+        self.logger.info('Night {}'.format(self.data.get('night')))
+
+        self.data['start'] = datetime.now().replace(microsecond=0)
+
+        # create process in database and obtain the process id
+        process = self.models.insert_process(
+            self.data,
+            self.pipeline_name
+        )
+
+        self.data['process_id'] = process.id
+        self.data['status'] = process.status
+
+        # TODO: ingest configuration file used, this should be done by process
+        # self.models.insert_config(process.id)
+
+        self.logger.info('Process ID {}'.format(process.id))
+        self.logger.info('ExpID {} started.'.format(self.data.get('expid')))
+
+        self.start_jobs()
+        self.finish_process()
+
+        return process.id
+
     def start_jobs(self):
         """ Distributes the cameras for parallel processing. """
 
@@ -137,7 +113,7 @@ class Jobs(QLFProcess):
         resumelog_lock = Lock()
 
         for camera in self.data.get('cameras'):
-            camera['start'] = datetime.datetime.now().replace(
+            camera['start'] = datetime.now().replace(
                 microsecond=0
             )
 
@@ -211,7 +187,7 @@ class Jobs(QLFProcess):
 
         logname.close()
 
-        camera['end'] = datetime.datetime.now().replace(microsecond=0)
+        camera['end'] = datetime.now().replace(microsecond=0)
         camera['status'] = 0
         camera['duration'] = str(
             camera.get('end') - camera.get('start')
@@ -221,10 +197,32 @@ class Jobs(QLFProcess):
             camera['status'] = 1
 
         return_cameras.append(camera)
- 
+
+    def finish_process(self):
+        """ Finish pipeline. """
+
+        self.data['end'] = datetime.now().replace(microsecond=0)
+
+        self.data['duration'] = self.data.get('end') - self.data.get('start')
+
+        self.logger.info("ExpID {} ended (runtime: {}).".format(
+           self.data.get('expid'),
+           str(self.data.get('duration'))
+        ))
+
+        self.models.update_process(
+            process_id=self.data.get('process_id'),
+            end=self.data.get('end'),
+            process_dir=self.data.get('output_dir'),
+            status=self.data.get('status')
+        )
+
+        proc = Thread(target=self.ingest_parallel_qas)
+        proc.start()
+
     def ingest_parallel_qas(self):
         self.logger.info('Ingesting QAs...')
-        start_ingestion = datetime.datetime.now().replace(microsecond=0)
+        start_ingestion = datetime.now().replace(microsecond=0)
 
         proc_qas = list()
 
@@ -252,7 +250,7 @@ class Jobs(QLFProcess):
         for proc in proc_qas:
             proc.join()
 
-        duration_ingestion = datetime.datetime.now().replace(microsecond=0) - start_ingestion
+        duration_ingestion = datetime.now().replace(microsecond=0) - start_ingestion
 
         for camera in self.data.get('cameras'):
              lm = LoadMetrics(camera.get('name'), self.data.get('expid'), self.data.get('night'))
@@ -284,7 +282,8 @@ class Jobs(QLFProcess):
                         stage_end['count'] += 1
 
                         if stage_end.get('count') == self.num_cameras:
-                            stage_end['time'] = datetime.datetime.now().replace(microsecond=0)
+                            end_time = datetime.now().replace(microsecond=0)
+                            stage_end['time'] = end_time
                             self.logger.info(
                                 '{} ended (runtime: {}).'.format(
                                     stage.get('display_name'),
@@ -296,9 +295,9 @@ class Jobs(QLFProcess):
                         stage_start['count'] += 1
 
                         if 'time' not in stage_start:
-                            stage_start['time'] = datetime.datetime.now().replace(microsecond=0)
+                            start_time = datetime.now().replace(microsecond=0)
+                            stage_start['time'] = start_time
                             self.logger.info('{} started.'.format(stage.get('display_name')))
-
 
         except Exception as err:
             self.logger.info(err)
@@ -307,4 +306,23 @@ class Jobs(QLFProcess):
 
 
 if __name__ == "__main__":
-    print('Standalone execution...')
+    print('Start Pipeline...')
+
+    exposure = {
+        'night': '20190101',
+        # 'cameras': [{'name': 'r7'}, {'name': 'r8'}],
+        'cameras': [{'name': 'r7'}],
+        'teldec': 14.84,
+        'telra': 333.22,
+        'exptime': 1000,
+        'zfill': '00000003',
+        'dateobs': '2019-01-01T22:00:00',
+        'tile': 6,
+        'desi_spectro_data': '/home/singulani/Projects/quicklook/qlf/backend/spectro/data',
+        'desi_spectro_redux': '/home/singulani/Projects/quicklook/qlf/backend/spectro/redux',
+        'flavor': 'science',
+        'expid': '3'
+    }
+
+    qlf_process = QLFProcess(exposure)
+    qlf_process.start()

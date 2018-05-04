@@ -45,22 +45,17 @@ class ExposureGenerator(Process):
         self.min_interval = 2
         self.max_interval = 5
 
+        self.__last_exposure = dict()
+        self.__cameras = list()
+        self.__base_night = None
+        self.__base_exposure = None
+
         arms = cfg.get('data', 'arms').split(',')
         spectrographs = cfg.get('data', 'spectrographs').split(',')
 
-        self.__last_exposure = Manager().dict()
-        self.__cameras = list()
-        self.__base_night = self.__get_random_night()
-        self.__base_exposure = self.__get_random_exposure()
-
         for arm in arms:
             for spec in spectrographs:
-                try:
-                    self.__cameras.append(arm + spec)
-                except Exception as err:
-                    log.error(err)
-
-        self.__print_vars()
+                self.__cameras.append(arm + spec)
 
     @staticmethod
     def __get_random_night():
@@ -70,27 +65,46 @@ class ExposureGenerator(Process):
 
     def __get_random_exposure(self):
 
-        return random.choice(os.listdir(spectro_path))
+        nights_path = os.path.join(spectro_path, self.__base_night)
 
+        if not os.path.exists(nights_path):
+            log.error("Directory does not exist: {}".format(nights_path))
+            raise OSError
+
+        exposures_list = re.findall(
+            "desi-(\d+).fits.fz",
+            ''.join(os.listdir(nights_path))
+        )
+
+        return random.choice(exposures_list)
 
     def run(self):
         while True:
             log.info("Starting generation of new exposure...")
+
             last_exposure = self.generate_exposure()
             log.info(
                 "Exposure id '%s' generated at '%s' as night '%s'."
                 % (last_exposure['expid'], last_exposure['date-obs'], last_exposure['night'])
             )
+
             self.__last_exposure.update(last_exposure)
+
             rand = random.randint(self.min_interval, self.max_interval)
             log.info("Next generation in %s minutes..." % rand)
-            time.sleep(rand*60)
-            # time.sleep(60)
+
+            time.sleep(rand * 60)
 
     def get_last_exposure(self):
         return Manager().dict(self.__last_exposure)
 
     def generate_exposure(self):
+        self.__base_night = self.__get_random_night()
+        self.__base_exposure = self.__get_random_exposure()
+
+        log.info("Base night: {}".format(self.__base_night))
+        log.info("Base exposure: {}".format(self.__base_exposure))
+
         gen_time = datetime.datetime.now()
         exp_id = self.__gen_new_expid()
         exp_id_zfill = str(exp_id).zfill(8)
@@ -122,7 +136,8 @@ class ExposureGenerator(Process):
             'teldec': hdr.get('teldec', None),
             'tile': hdr.get('tileid', None),
             'flavor': hdr.get('flavor', None),
-            'exptime': hdr.get('exptime', None)
+            'exptime': hdr.get('exptime', None),
+            'time': datetime.datetime.utcnow()
         }
 
     def __gen_new_expid(self):
@@ -155,12 +170,12 @@ class ExposureGenerator(Process):
         return sorted(regex_match)[-1]
 
     def __gen_desi_file(self, exp_id, gen_time):
-        src = os.path.join(spectro_path, self.base_night)
+        src = os.path.join(spectro_path, self.__base_night)
         dest = os.path.join(
             spectro_path, self.__night_to_generate(gen_time))
         self.__ensure_dir(dest)
         src_file = os.path.join(
-            src, ("desi-{}.fits.fz".format(self.base_exposure)))
+            src, ("desi-{}.fits.fz".format(self.__base_exposure)))
         dest_file = os.path.join(dest, ("desi-{}.fits.fz".format(exp_id)))
         shutil.copy(src_file, dest_file)
         self.__update_fitsfile_metadata(dest_file, exp_id, gen_time)
@@ -187,18 +202,18 @@ class ExposureGenerator(Process):
         hdulist.close()
 
     def __gen_fibermap_file(self, exp_id, gen_time):
-        src = os.path.join(spectro_path, self.base_night)
+        src = os.path.join(spectro_path, self.__base_night)
         dest = os.path.join(
             spectro_path, self.__night_to_generate(gen_time))
         self.__ensure_dir(dest)
         src_file = os.path.join(
-            src, ("fibermap-{}.fits".format(self.base_exposure)))
+            src, ("fibermap-{}.fits".format(self.__base_exposure)))
         dest_file = os.path.join(dest, ("fibermap-{}.fits".format(exp_id)))
         shutil.copy(src_file, dest_file)
         self.__update_fitsfile_metadata(dest_file, exp_id, gen_time)
 
     def __gen_fiberflat_folder(self, gen_time):
-        src = os.path.join(fiberflat_path, self.base_night)
+        src = os.path.join(fiberflat_path, self.__base_night)
         dest = os.path.join(
             fiberflat_path, self.__night_to_generate(gen_time))
 
@@ -215,7 +230,7 @@ class ExposureGenerator(Process):
 
     def __gen_psfboot_folder(self, gen_time):
         # it is fine to just copy the path
-        src = os.path.join(psfboot_path, self.base_night)
+        src = os.path.join(psfboot_path, self.__base_night)
         dest = os.path.join(
             psfboot_path, self.__night_to_generate(gen_time))
 
@@ -241,63 +256,10 @@ class ExposureGenerator(Process):
         log.info("spectro_path:      {}".format(spectro_path))
         log.info("fiberflat_path:    {}".format(fiberflat_path))
         log.info("psfboot_path:      {}".format(psfboot_path))
-        log.info("base_night:        {}".format(self.base_night))
-        log.info("base_exposure:     {}".format(self.base_exposure))
         log.info("cameras:           {}".format(",".join(self.__cameras)))
 
 
-# @Pyro4.expose
-# @Pyro4.behavior(instance_mode="single")
-# class ICSInterface(object):
-#
-#     generator = False
-#
-#     def start(self):
-#         if self.generator and self.generator.is_alive():
-#             log.info("Exposure generator is already initialized.")
-#         else:
-#             self.generator = ExposureGenerator()
-#             self.generator.start()
-#
-#     def stop(self):
-#         if self.generator and self.generator.is_alive():
-#             log.info("Stop pid %i" % self.generator.pid)
-#             self.generator.terminate()
-#         else:
-#             log.info("Exposure generator is not initialized.")
-#
-#     def last_exposure(self):
-#         if self.generator and self.generator.is_alive():
-#             return dict(self.generator.get_last_exposure())
-#         else:
-#             log.info("Exposure generator is not initialized.")
-#             return dict()
-#
-#     def get_exposure_summary(self, date_range=None, expid_range=None, require_data_written=True):
-#         # TODO
-#         return
-#
-#     def get_exposure_files(self, expid, dest=None, file_class=['desi', 'fibermap'], overwrite=True):
-#         # TODO
-#         return
-#
-#
-# def main():
-#     try:
-#         generator = 'exposure.generator'
-#         host = 'localhost'
-#         port = 56006
-#     except Exception as err:
-#         log.error(err)
-#         sys.exit(1)
-#
-#     Pyro4.Daemon.serveSimple(
-#         {ICSInterface: generator},
-#         host=host,
-#         port=port,
-#         ns=False
-#     )
-#
-#
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    print('Start Exposure Generator...')
+    generator = ExposureGenerator()
+    generator.start()
